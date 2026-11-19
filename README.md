@@ -53,8 +53,8 @@ Every push to `main` deploys to GitHub Pages through `.github/workflows/pages.ym
 - **Bonus ending**: hit by too many binguses.
 - **Secret ending**: find the golden key, then the private door.
 
-**13 outfits** unlock through achievements and endings. They're all in the **Wardrobe**:
-- Classic maid, his regular clothes, sailor-style Sky Maid, Goth Maid and Sakura Maid.
+**14 outfits** unlock through achievements and endings. They're all in the **Wardrobe**:
+- Classic maid, his regular clothes, sailor-style Sky Maid, Goth Maid, Sakura Maid and the Princess Gown.
 - Pickle, Pie, Pear, Pipe, Mold, Mayo and Bingus fits.
 - Sleepy pyjamas.
 

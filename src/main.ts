@@ -475,7 +475,7 @@ function wireUi() {
   window.addEventListener('keydown', (e) => {
     if (anyModalOpen()) return;
     const tag = (document.activeElement as HTMLElement | null)?.tagName;
-    if (tag === 'BUTTON' || tag === 'INPUT') return; // let focused controls handle Enter/Space
+    if (tag === 'BUTTON' || tag === 'INPUT' || tag === 'A') return; // let focused controls handle Enter/Space
     if (state === 'title' && (e.code === 'Space' || e.code === 'Enter')) {
       e.preventDefault();
       startRun();

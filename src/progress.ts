@@ -70,6 +70,8 @@ export function outfitProgress(p: Profile, id: OutfitId): [number, number] {
       return [seen('coma'), 1];
     case 'sakura':
       return [seen('secret'), 1];
+    case 'princess':
+      return [ENDINGS.reduce((n, e) => n + seen(e.id), 0), ENDINGS.length];
   }
 }
 

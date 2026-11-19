@@ -1601,6 +1601,53 @@ function drawHeadWear(ctx: CanvasRenderingContext2D, sway: number, t: number) {
       ctx.fill();
       return;
     }
+    case 'tiara': {
+      ctx.save();
+      ctx.translate(2, -33);
+      ctx.rotate(0.14 + sway * 0.02);
+      const gold = ST.headA ?? '#f2c14e';
+      // band with three points
+      ctx.beginPath();
+      ctx.moveTo(-15, 2);
+      ctx.lineTo(-14, -5);
+      ctx.lineTo(-9, -2);
+      ctx.lineTo(-5, -10);
+      ctx.lineTo(0, -3);
+      ctx.lineTo(5, -14);
+      ctx.lineTo(9, -3);
+      ctx.lineTo(13, -8);
+      ctx.lineTo(16, 2);
+      ctx.quadraticCurveTo(0, 5, -15, 2);
+      ctx.closePath();
+      fillOl(ctx, gold, 1.8);
+      ctx.fillStyle = 'rgba(255,255,255,0.55)';
+      ctx.fillRect(-12, -1, 24, 1.4);
+      // gems: big centre stone, side pearls
+      ctx.beginPath();
+      ctx.ellipse(5, -3, 3, 3.6, 0, 0, TAU);
+      fillOl(ctx, ST.headB ?? '#6fd3ff', 1.2);
+      ctx.fillStyle = 'rgba(255,255,255,0.8)';
+      ctx.beginPath();
+      ctx.arc(4, -4.5, 1, 0, TAU);
+      ctx.fill();
+      for (const [x, y] of [[-5, -8], [13, -6], [-14, -3]] as [number, number][]) {
+        ctx.beginPath();
+        ctx.arc(x, y, 1.9, 0, TAU);
+        fillOl(ctx, '#ff6fae', 1);
+      }
+      // twinkle
+      const tw = 0.5 + 0.5 * Math.sin(t * 5);
+      ctx.strokeStyle = `rgba(255,255,255,${0.4 + tw * 0.6})`;
+      ctx.lineWidth = 1.2;
+      ctx.beginPath();
+      ctx.moveTo(5, -21 - tw * 2);
+      ctx.lineTo(5, -17);
+      ctx.moveTo(3, -19);
+      ctx.lineTo(7, -19);
+      ctx.stroke();
+      ctx.restore();
+      return;
+    }
     case 'beret': {
       ctx.save();
       ctx.rotate(0.12);
@@ -2370,6 +2417,63 @@ function drawTorso(ctx: CanvasRenderingContext2D, p: Pose, flutter: number) {
       ctx.beginPath();
       ctx.arc(-10 - k * 6, -38 - k * 16, 4 + k * 6, 0, TAU);
       ctx.fill();
+      return;
+    }
+
+    case 'princess': {
+      // ball gown: wide under-skirt, draped over-skirt with gold trim, scalloped petticoat
+      const hem = 24;
+      scallopEdge(ctx, -35 - fl * 6, hem + fl * 2, 35 - fl * 2, hem - fl * 1.5, 10, 4, ST.trim);
+      skirtPath(ctx, fl, hem, 35, -3);
+      fillOl(ctx, hGrad(ctx, -35, 35, ST.dressDark, ST.dress, ST.dressHL), 2.6);
+      // over-skirt drapes
+      for (const side of [-1, 1]) {
+        ctx.beginPath();
+        ctx.moveTo(side * 11, -3);
+        ctx.quadraticCurveTo(side * 26 - fl * 3, 6, side * 25 - fl * 4, 14 - fl);
+        ctx.quadraticCurveTo(side * 14, 9, side * 2, 11);
+        ctx.closePath();
+        fillOl(ctx, ST.apron, 2);
+        ctx.strokeStyle = ST.stripe;
+        ctx.lineWidth = 1.6;
+        ctx.beginPath();
+        ctx.moveTo(side * 25 - fl * 4, 14 - fl);
+        ctx.quadraticCurveTo(side * 14, 9, side * 2, 11);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.arc(side * 25 - fl * 4, 14 - fl, 2.2, 0, TAU);
+        fillOl(ctx, ST.trim, 1);
+      }
+      // gold hem band
+      ctx.strokeStyle = ST.stripe;
+      ctx.lineWidth = 2.2;
+      ctx.beginPath();
+      ctx.moveTo(-33 - fl * 6, hem - 3 + fl * 2);
+      ctx.lineTo(33 - fl * 2, hem - 4 - fl * 1.5);
+      ctx.stroke();
+      skirtPattern(ctx, hem, fl);
+      // bodice
+      bodicePath(ctx, 0);
+      fillOl(ctx, hGrad(ctx, -14, 14, ST.dressDark, ST.dress, ST.dressHL), 2.6);
+      bulge(ctx, b, ST.dress, 11, -22, 0, 14);
+      // gold V waist + neckline lace
+      ctx.strokeStyle = ST.stripe;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(-12, -4);
+      ctx.lineTo(1, 2);
+      ctx.lineTo(12, -4);
+      ctx.stroke();
+      scallopEdge(ctx, -13, -27, 14, -27, 6, 3, ST.trim);
+      smallBow(ctx, 2, -20, ST.bow, 0.8);
+      // pearl necklace
+      ctx.fillStyle = '#fffaf2';
+      for (let i = 0; i < 6; i++) {
+        const a = Math.PI * (0.15 + (i / 5) * 0.7);
+        ctx.beginPath();
+        ctx.arc(2 + Math.cos(a) * 7, -32 + Math.sin(a) * 3, 1.3, 0, TAU);
+        ctx.fill();
+      }
       return;
     }
 

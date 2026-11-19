@@ -12,7 +12,8 @@ export type OutfitId =
   | 'pickle'
   | 'pie'
   | 'pear'
-  | 'pipe';
+  | 'pipe'
+  | 'princess';
 
 export type HeadWear =
   | 'maidband'
@@ -27,9 +28,10 @@ export type HeadWear =
   | 'nightcap'
   | 'tophat'
   | 'sakurapin'
-  | 'beret';
+  | 'beret'
+  | 'tiara';
 export type Pattern = 'none' | 'spores' | 'bumps' | 'stars' | 'wrinkles' | 'petals';
-export type BodyKind = 'maid' | 'regular' | 'sailor' | 'goth' | 'wa' | 'pajama' | 'hoodie' | 'onesie' | 'pickle' | 'pear' | 'jar' | 'pipe' | 'baker';
+export type BodyKind = 'maid' | 'regular' | 'sailor' | 'goth' | 'wa' | 'pajama' | 'hoodie' | 'onesie' | 'pickle' | 'pear' | 'jar' | 'pipe' | 'baker' | 'princess';
 export type LegKind = 'stock' | 'socks' | 'tights' | 'stripes' | 'pants' | 'onesie' | 'pipe';
 export type FeetKind = 'mary' | 'sneaker' | 'loafer' | 'geta' | 'slipper' | 'paw' | 'boot';
 export type SleeveKind = 'puff' | 'jacket' | 'short' | 'bell' | 'wide' | 'long' | 'paw' | 'none' | 'stub' | 'pipe';
@@ -86,6 +88,32 @@ const CLASSIC: OutfitStyle = {
   sleeveB: '#fdfbff',
   head: 'maidband',
   pattern: 'none',
+};
+
+// princess: tiered pink ball gown, gold trim, pearl necklace, puff sleeves and a jewelled tiara
+const PRINCESS: OutfitStyle = {
+  ...CLASSIC,
+  body: 'princess',
+  dress: '#ff9fd0',
+  dressDark: '#e0679f',
+  dressHL: '#ffd6ea',
+  apron: '#ffc2e0',
+  apronShade: '#f39ac4',
+  stripe: '#f2c14e',
+  trim: '#fff4fa',
+  bow: '#c2347a',
+  legs: 'stock',
+  legA: '#fff4fa',
+  legB: '#ffc2e0',
+  feet: 'mary',
+  feetA: '#f2c14e',
+  feetB: '#ff9fd0',
+  sleeve: 'puff',
+  sleeveA: '#ffc2e0',
+  sleeveB: '#fff4fa',
+  head: 'tiara',
+  headA: '#f2c14e',
+  headB: '#6fd3ff',
 };
 
 export const STYLES: Record<OutfitId, OutfitStyle> = {
@@ -341,6 +369,7 @@ export const STYLES: Record<OutfitId, OutfitStyle> = {
     sleeveB: '#5a6680',
     head: 'valve',
   },
+  princess: PRINCESS,
 };
 
 export interface OutfitDef {
@@ -364,6 +393,7 @@ export const OUTFITS: OutfitDef[] = [
   { id: 'bingus', name: 'Bingus Onesie', how: 'Find the bingus ending' },
   { id: 'sleepy', name: 'Sleepy Maid', how: 'Find the food coma ending' },
   { id: 'sakura', name: 'Sakura Maid', how: 'Find the secret ending' },
+  { id: 'princess', name: 'Princess Gown', how: 'Find all 6 endings' },
 ];
 
 export const styleOf = (id: string): OutfitStyle => STYLES[id as OutfitId] ?? CLASSIC;

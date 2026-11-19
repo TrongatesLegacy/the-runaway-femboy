@@ -176,6 +176,32 @@ body {
 .tagline b {
   color: #fff1b0;
 }
+.made-by {
+  margin: -6px 0 4px;
+  padding: 7px 16px 8px;
+  font-family: 'Lilita One', sans-serif;
+  font-size: clamp(16px, 2.2vw, 21px);
+  letter-spacing: 0.02em;
+  color: var(--text);
+  background: rgba(22, 10, 40, 0.72);
+  border: 2px solid rgba(255, 255, 255, 0.16);
+  border-radius: 999px;
+  text-shadow: 0 2px 0 var(--ink);
+  transform: rotate(-2deg);
+}
+.made-by a {
+  color: var(--gold);
+  text-decoration: none;
+  border-bottom: 2px solid rgba(255, 216, 74, 0.45);
+}
+.made-by a:hover,
+.made-by a:focus-visible {
+  color: #fff;
+  border-bottom-color: var(--pink);
+}
+.made-by .amp {
+  color: var(--pink-2);
+}
 .menu {
   display: flex;
   flex-direction: column;
@@ -814,6 +840,14 @@ input[type='range']:focus-visible {
   .title-wrap {
     gap: 8px;
   }
+  .tagline {
+    margin: 0;
+  }
+  .made-by {
+    margin: -4px 0 0;
+    padding: 4px 14px 5px;
+    font-size: 15px;
+  }
   .card h2 {
     font-size: 30px;
   }
@@ -939,9 +973,14 @@ input[type='range']:focus-visible {
 }
 .endings-list {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  grid-template-columns: repeat(3, 1fr);
   gap: 8px;
   margin-bottom: 16px;
+}
+@media (max-width: 560px) {
+  .endings-list {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 .ending {
   background: rgba(0, 0, 0, 0.25);
