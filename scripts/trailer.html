@@ -1,0 +1,490 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <style>
+      body { margin: 0; background: #000; }
+      canvas { display: block; }
+    </style>
+  </head>
+  <body>
+    <canvas id="c" width="1920" height="1080"></canvas>
+    <script type="module">
+      // Deterministic, frame-by-frame trailer renderer built on the real game engine.
+      // Driven by scripts/make-trailer.mjs: it calls window.renderFrame(i) for every frame.
+      import '@fontsource/lilita-one/400.css';
+      import '@fontsource/fredoka/600.css';
+      import { audio } from '/src/audio.ts';
+      import { Game, END_X } from '/src/game.ts';
+      import { ent, makeBingus } from '/src/level.ts';
+      import { drawEndingScene } from '/src/endings.ts';
+      import { GY } from '/src/art/backgrounds.ts';
+      import { Rng } from '/src/util.ts';
+      import * as T from '/src/art/things.ts';
+
+      await document.fonts.load('80px "Lilita One"');
+      await document.fonts.load('600 20px "Fredoka"');
+
+      const FPS = 30;
+      const W = 1920, H = 1080, S = H / 720, VW = W / S, VH = 720;
+      const c = document.getElementById('c');
+      const ctx = c.getContext('2d');
+
+      // ---- capture sound effects the engine "plays", to mix them into the trailer audio later
+      const sfxLog = [];
+      let now = 0;
+      const KEEP = new Set(['sfx/jump', 'sfx/double_jump', 'sfx/stomp', 'sfx/meow1', 'sfx/meow2', 'sfx/slap', 'sfx/pie', 'sfx/powerup', 'sfx/pickle', 'sfx/pear', 'sfx/splat', 'sfx/clang', 'sfx/bonk', 'sfx/glass', 'sfx/hit', 'sfx/star', 'sfx/growl', 'sfx/transform', 'sfx/slide', 'sfx/land']);
+      const lastAt = {};
+      audio.play = (key, o = {}) => {
+        if (!KEEP.has(key) || muteSfx) return;
+        const gap = key === 'sfx/star' ? 0.09 : 0.06;
+        if (lastAt[key] !== undefined && now - lastAt[key] < gap) return;
+        lastAt[key] = now;
+        sfxLog.push({ key, t: +now.toFixed(3), vol: o.vol ?? 1, rate: o.rate ?? 1 });
+      };
+      let muteSfx = false;
+      const cue = (key, vol = 1, rate = 1) => sfxLog.push({ key, t: +now.toFixed(3), vol, rate });
+
+      const g = new Game();
+      g.view = { vw: VW, vh: VH, oy: 0, px: 430 };
+      const ease = (t) => 1 - Math.pow(1 - t, 3);
+      const backOut = (t) => { const c1 = 1.70158, c3 = c1 + 1; return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2); };
+      const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+
+      // place the run at x on a clean stretch (no procedural obstacles) with scripted entities
+      function stageAt(x, opts = {}) {
+        g.reset(false);
+        g.view.px = opts.px ?? 430;
+        g.started = true;
+        g.playT = 5;
+        g.p.x = x;
+        g.p.vx = opts.vx ?? 560;
+        g.moldX = x - (opts.gap ?? 330);
+        g.camX = x - g.view.px;
+        g.genX = 1e9;
+        g.decorX = x - 500;
+        g.stage = g.stageAt(x);
+        g.stageBanner = 0;
+        g.tut = 99;
+        g.ents = [];
+        return g;
+      }
+      const place = (...es) => g.ents.push(...es);
+      const bingus = (kind, dx, look) => {
+        const b = makeBingus(new Rng(Math.round(dx * 7 + kind.length)), kind, g.p.x + dx);
+        if (look) b.look = { ...b.look, ...look };
+        return b;
+      };
+      const stars = (dx0, y, n, gap = 56) => Array.from({ length: n }, (_, i) => ent('star', g.p.x + dx0 + i * gap, y, 26, 26));
+      const arc = (dx0, w, peak, n) => Array.from({ length: n }, (_, i) => ent('star', g.p.x + dx0 + (i / (n - 1)) * w, GY - 70 - Math.sin((i / (n - 1)) * Math.PI) * peak, 26, 26));
+
+      // ------------------------------------------------------------------
+      // SHOT LIST (seconds)
+      // ------------------------------------------------------------------
+      const shots = [
+        {
+          // cold open: the mold, Astray unaware
+          dur: 2.8,
+          setup() {
+            stageAt(2600, { gap: 230, px: 560 });
+            g.started = false;
+            g.p.vx = 0;
+            g.p.runAmt = 0;
+            muteSfx = true;
+            cue('sfx/growl', 0.9, 0.85);
+          },
+          zoom: (t) => ({ z: 1.55 - t * 0.06, fx: 330 + t * 40, fy: 470 }),
+          caption: { text: 'SOMETHING IS GROWING…', at: 0.35, color: '#b6ee6c', pos: 'top', size: 64, style: 'whisper' },
+          dark: (t) => 0.35 * (1 - clamp(t / 1.2, 0, 1)) + 0.15,
+        },
+        {
+          // he notices — and runs
+          dur: 1.8,
+          setup() {
+            stageAt(2600, { gap: 215, px: 560, vx: 0 });
+            g.started = false;
+            g.p.runAmt = 0;
+            muteSfx = false;
+          },
+          at: [[0.55, () => { g.started = true; g.playT = 2; cue('sfx/growl', 1, 1.05); g.fx.shake(14); }]],
+          zoom: (t) => ({ z: 1.9 - ease(clamp(t / 1.8, 0, 1)) * 0.5, fx: g.p.x - g.camX + 10, fy: 470 }),
+          caption: { text: '…AND IT’S HUNGRY.', at: 0.6, color: '#ffffff', pos: 'top', size: 72 },
+        },
+        {
+          // title slam
+          dur: 1.75,
+          title: true,
+          setup() {
+            stageAt(4200, { gap: 300 });
+            place(...arc(300, 600, 140, 7));
+            muteSfx = true;
+          },
+          flash: 1,
+        },
+        {
+          dur: 1.75,
+          setup() {
+            stageAt(6000, { gap: 360 });
+            muteSfx = false;
+            place(ent('lowpipe', g.p.x + 420, GY, 130, 86, { style: 'copper', seed: 2 }), ...arc(340, 300, 190, 6));
+          },
+          keys: [[0.55, 'down', 'Space'], [0.85, 'up', 'Space']],
+          caption: { text: 'DODGE PIPES', at: 0.15, color: '#ffd84a' },
+          flash: 0.6,
+        },
+        {
+          dur: 1.5,
+          setup() {
+            stageAt(9000, { gap: 360 });
+            place(ent('overpipe', g.p.x + 300, GY - 112, 320, 600, { style: 'green', nozzle: false }), ...stars(320, GY - 40, 6));
+          },
+          keys: [[0.12, 'down', 'ArrowDown'], [1.3, 'up', 'ArrowDown']],
+          caption: { text: 'SLIDE UNDER', at: 0.1, color: '#6fe7ff' },
+          flash: 0.5,
+        },
+        {
+          dur: 1.8,
+          setup() {
+            stageAt(25000, { gap: 380 });
+            const b = bingus('walk', 700, { acc: 'sweater', accColor: '#e8455f', accColor2: '#ffd1da' });
+            b.vx = -80;
+            place(b, ...stars(200, GY - 260, 4));
+          },
+          keys: [[0.38, 'down', 'Space'], [0.75, 'up', 'Space']],
+          caption: { text: 'STOMP BINGUSES', at: 0.1, color: '#ff9fd6' },
+          zoom: (t) => ({ z: 1.12, fx: 620, fy: 430 }),
+          flash: 0.6,
+        },
+        {
+          dur: 1.7,
+          setup() {
+            stageAt(28000, { gap: 250 });
+            g.p.pickle = 5;
+            g.p.happyT = 0.6;
+            place(...stars(260, GY - 70, 12, 60), ent('lowpipe', g.p.x + 1100, GY, 110, 70, { style: 'red', seed: 3 }));
+            cue('sfx/powerup', 0.7);
+            cue('sfx/pickle', 0.8);
+          },
+          keys: [[0, 'down', 'ShiftLeft'], [0.74, 'down', 'Space'], [1.0, 'up', 'Space']],
+          caption: { text: 'PICKLE POWER!', at: 0.05, color: '#9cf06a' },
+          flash: 0.7,
+          flashColor: '#9cf06a',
+        },
+        {
+          dur: 1.75,
+          setup() {
+            stageAt(31000, { gap: 400 });
+            g.p.pie = 6;
+            place(bingus('walk', 520, { acc: 'bow' }), bingus('hop', 980, { acc: 'hat' }));
+            cue('sfx/powerup', 0.6);
+          },
+          keys: [[0.38, 'down', 'KeyX'], [0.45, 'up', 'KeyX'], [1.05, 'down', 'KeyX'], [1.12, 'up', 'KeyX']],
+          caption: { text: 'PIE POWER!', at: 0.05, color: '#ffb36b' },
+          zoom: () => ({ z: 1.1, fx: 640, fy: 430 }),
+          flash: 0.7,
+          flashColor: '#ffb36b',
+        },
+        {
+          dur: 1.75,
+          setup() {
+            stageAt(52500, { gap: 400 });
+            g.p.pear = 5;
+            place(
+              ent('lowpipe', g.p.x + 360, GY, 120, 80, { style: 'violet', seed: 4 }),
+              ent('tallpipe', g.p.x + 700, GY, 62, 190, { style: 'red', seed: 5 }),
+              bingus('chonk', 1000),
+            );
+            cue('sfx/pear', 0.8);
+          },
+          caption: { text: 'PEAR POWER!', at: 0.05, color: '#fff07a' },
+          flash: 0.7,
+          flashColor: '#fff07a',
+        },
+        {
+          // neon rooftops: chonk bounce + double jump
+          dur: 1.8,
+          setup() {
+            stageAt(56000, { gap: 420 });
+            const ch = bingus('chonk', 760);
+            ch.vx = -35;
+            place(ch, ...stars(1050, GY - 430, 5, 55), ...stars(380, GY - 300, 3));
+          },
+          keys: [[0.42, 'down', 'Space'], [0.8, 'up', 'Space'], [1.22, 'down', 'Space'], [1.45, 'up', 'Space']],
+          caption: { text: 'NEON ROOFTOPS', at: 0.2, color: '#6fe7ff', pos: 'top', size: 64 },
+          flash: 0.5,
+        },
+        {
+          // the mold closes in
+          dur: 1.9,
+          setup() {
+            stageAt(60000, { gap: 150 });
+            g.p.stamina = 1;
+          },
+          keys: [[0.5, 'down', 'ShiftLeft']],
+          at: [[0.2, () => { cue('sfx/growl', 1, 1); g.fx.shake(12); }]],
+          zoom: (t) => ({ z: 1.25, fx: 330, fy: 420 }),
+          caption: { text: 'DON’T LOOK BACK', at: 0.15, color: '#b6ee6c' },
+          flash: 0.5,
+        },
+        {
+          // mayo
+          dur: 1.7,
+          setup() {
+            stageAt(64000, { gap: 420 });
+            g.p.mayo = 62;
+            place(ent('puddle', g.p.x + 180, GY, 130, 14), ent('jar', g.p.x + 600, GY - 26, 48, 48, { vx: -200, rot: 0 }), ent('bottle', g.p.x + 1150, GY, 40, 70, { timer: 5 }));
+          },
+          zoom: () => ({ z: 1.15, fx: 640, fy: 430 }),
+          caption: { text: 'AVOID. THE. MAYO.', at: 0.05, color: '#fff1b0' },
+          flash: 0.5,
+        },
+        {
+          // ...or else
+          dur: 1.0,
+          scene: (t) => drawEndingScene(ctx, 'mayo', VW, VH, t + 1.2),
+          setup() { cue('sfx/splat', 1, 0.8); },
+          flash: 0.9,
+          flashColor: '#fff9e4',
+        },
+        {
+          // home!
+          dur: 1.5,
+          setup() {
+            stageAt(END_X - 760, { gap: 500 });
+            g.houseSpawned = true;
+            place(ent('house', END_X, GY, 420, 380), ...arc(250, 360, 120, 6));
+          },
+          zoom: (t) => ({ z: 1.0 + t * 0.12, fx: 760, fy: 400 }),
+          caption: { text: 'RUN HOME…', at: 0.1, color: '#ffd6e4' },
+          flash: 0.5,
+        },
+        {
+          dur: 2.5,
+          scene: (t) => drawEndingScene(ctx, 'win', VW, VH, t + 0.35),
+          setup() { cue('sfx/transform', 0.9); },
+          caption: { text: 'GET YOUR REGULAR BACK ☆', at: 0.95, color: '#ffd84a', size: 70, pos: 'top' },
+          flash: 1,
+        },
+        {
+          dur: 3.0,
+          endcard: true,
+          setup() {
+            g.reset(true);
+            g.p.vx = 380;
+            for (let i = 0; i < 300; i++) g.update(1 / 120);
+          },
+          flash: 1,
+        },
+      ];
+      let acc = 0;
+      shots.forEach((s) => { s.start = acc; acc += s.dur; });
+      const TOTAL = acc;
+      window.TRAILER = { FPS, TOTAL, frames: Math.round(TOTAL * FPS), shots: shots.map((s) => ({ start: s.start, dur: s.dur })) };
+
+      // ------------------------------------------------------------------
+      function key(type, code) {
+        window.dispatchEvent(new KeyboardEvent(type === 'down' ? 'keydown' : 'keyup', { code, key: code, bubbles: true }));
+      }
+
+      function caption(cap, lt) {
+        if (!cap || lt < cap.at) return;
+        const k = lt - cap.at;
+        const size = cap.size ?? 96;
+        const whisper = cap.style === 'whisper';
+        const s = whisper ? 1 : backOut(clamp(k / 0.22, 0, 1));
+        const a = whisper ? clamp(k / 0.6, 0, 1) : clamp(k / 0.06, 0, 1);
+        const y = cap.pos === 'bottom' ? VH - 150 : 135;
+        ctx.save();
+        ctx.translate(VW / 2, y);
+        ctx.rotate(whisper ? 0 : -0.035);
+        ctx.scale(s, s);
+        ctx.globalAlpha = a;
+        ctx.font = `${size}px "Lilita One"`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        const w = ctx.measureText(cap.text).width;
+        if (!whisper) {
+          // skewed band behind the words
+          ctx.save();
+          ctx.transform(1, 0, -0.25, 1, 0, 0);
+          ctx.fillStyle = 'rgba(22,10,40,0.82)';
+          ctx.fillRect(-w / 2 - 40, -size * 0.62, w + 80, size * 1.24);
+          ctx.fillStyle = cap.color;
+          ctx.fillRect(-w / 2 - 40, size * 0.62 - 8, w + 80, 8);
+          ctx.restore();
+        }
+        ctx.lineJoin = 'round';
+        ctx.lineWidth = size * 0.18;
+        ctx.strokeStyle = '#2a1420';
+        ctx.strokeText(cap.text, 0, 2);
+        ctx.fillStyle = cap.color;
+        ctx.shadowColor = whisper ? cap.color : 'transparent';
+        ctx.shadowBlur = whisper ? 30 : 0;
+        ctx.fillText(cap.text, 0, 0);
+        ctx.restore();
+      }
+
+      function word(text, x, y, size, top, bot, rot) {
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.rotate(rot);
+        ctx.font = `${size}px "Lilita One"`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'alphabetic';
+        ctx.lineJoin = 'round';
+        ctx.fillStyle = 'rgba(42,20,32,0.6)';
+        ctx.fillText(text, 0, size * 0.09);
+        ctx.lineWidth = size * 0.2;
+        ctx.strokeStyle = '#2a1420';
+        ctx.strokeText(text, 0, 0);
+        const gr = ctx.createLinearGradient(0, -size * 0.75, 0, 0);
+        gr.addColorStop(0, top);
+        gr.addColorStop(1, bot);
+        ctx.fillStyle = gr;
+        ctx.fillText(text, 0, 0);
+        ctx.restore();
+      }
+
+      function logo(cx, cy, k, scale = 1) {
+        const s = backOut(clamp(k / 0.35, 0, 1)) * scale;
+        ctx.save();
+        ctx.translate(cx, cy);
+        ctx.scale(s, s);
+        word('the', -250, -150, 56, '#ffe98a', '#ffc83a', -0.14);
+        word('RUNAWAY', 0, -60, 150, '#ffffff', '#ffb3d6', -0.06);
+        word('FEMBOY', 10, 80, 168, '#ffb8dc', '#e0388a', -0.06);
+        ctx.save();
+        ctx.translate(330, -80);
+        ctx.rotate(0.3 + k * 0.6);
+        T.starPath(ctx, 40);
+        ctx.fillStyle = '#ffd84a';
+        ctx.fill();
+        ctx.lineWidth = 8;
+        ctx.strokeStyle = '#2a1420';
+        ctx.stroke();
+        ctx.restore();
+        ctx.restore();
+      }
+
+      function pill(text, x, y, size, bg, fg) {
+        ctx.save();
+        ctx.font = `600 ${size}px "Fredoka"`;
+        const w = ctx.measureText(text).width + size * 1.6;
+        ctx.fillStyle = bg;
+        ctx.strokeStyle = 'rgba(255,255,255,0.25)';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.roundRect(x - w / 2, y - size * 0.95, w, size * 1.9, size);
+        ctx.fill();
+        ctx.stroke();
+        ctx.fillStyle = fg;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(text, x, y + 2);
+        ctx.restore();
+      }
+
+      let cur = -1;
+      let shotT = 0;
+      const SUB = 4;
+
+      window.renderFrame = (i) => {
+        const t = i / FPS;
+        now = t;
+        let si = shots.findIndex((s) => t >= s.start && t < s.start + s.dur);
+        if (si < 0) si = shots.length - 1;
+        const shot = shots[si];
+        if (si !== cur) {
+          cur = si;
+          shotT = 0;
+          // release any held keys between shots
+          for (const k of ['Space', 'ArrowDown', 'ShiftLeft', 'KeyX']) key('up', k);
+          shot.setup?.();
+          shot._done = new Set();
+        } else {
+          shotT += 1 / FPS;
+          if (!shot.scene) for (let s = 0; s < SUB; s++) g.update(1 / (FPS * SUB));
+        }
+        const lt = shotT;
+        // scripted inputs & events
+        (shot.keys || []).forEach(([kt, type, code], idx) => {
+          if (lt >= kt && !shot._done.has('k' + idx)) {
+            shot._done.add('k' + idx);
+            key(type, code);
+          }
+        });
+        (shot.at || []).forEach(([at, fn], idx) => {
+          if (lt >= at && !shot._done.has('a' + idx)) {
+            shot._done.add('a' + idx);
+            fn();
+          }
+        });
+
+        ctx.setTransform(S, 0, 0, S, 0, 0);
+        ctx.fillStyle = '#000';
+        ctx.fillRect(0, 0, VW, VH);
+        if (shot.scene) {
+          shot.scene(lt);
+        } else {
+          ctx.save();
+          if (shot.zoom) {
+            const { z, fx, fy } = shot.zoom(lt);
+            ctx.translate(fx, fy);
+            ctx.scale(z, z);
+            ctx.translate(-fx, -fy);
+          }
+          g.render(ctx);
+          ctx.restore();
+        }
+        if (shot.dark) {
+          ctx.fillStyle = `rgba(0,0,0,${shot.dark(lt)})`;
+          ctx.fillRect(0, 0, VW, VH);
+        }
+        if (shot.title) {
+          ctx.fillStyle = 'rgba(16,6,30,0.55)';
+          ctx.fillRect(0, 0, VW, VH);
+          logo(VW / 2, VH / 2 - 10, lt);
+        }
+        if (shot.endcard) {
+          const k = lt;
+          ctx.fillStyle = 'rgba(16,6,30,0.62)';
+          ctx.fillRect(0, 0, VW, VH);
+          logo(VW / 2, VH / 2 - 90, k, 0.82);
+          const a = clamp((k - 0.45) / 0.3, 0, 1);
+          ctx.globalAlpha = a;
+          pill('PLAY FREE IN YOUR BROWSER', VW / 2, VH / 2 + 120, 34, '#ff6fae', '#ffffff');
+          ctx.globalAlpha = clamp((k - 0.75) / 0.3, 0, 1);
+          ctx.font = '600 28px "Fredoka"';
+          ctx.fillStyle = '#fff4fa';
+          ctx.textAlign = 'center';
+          ctx.fillText('trongateslegacy.github.io/the-runaway-femboy', VW / 2, VH / 2 + 196);
+          ctx.font = '600 22px "Fredoka"';
+          ctx.fillStyle = 'rgba(255,244,250,0.7)';
+          ctx.fillText('phone  ·  tablet  ·  PC', VW / 2, VH / 2 + 236);
+          ctx.globalAlpha = 1;
+        }
+        caption(shot.caption, lt);
+        // cut flash
+        if (shot.flash && lt < 0.2) {
+          ctx.fillStyle = shot.flashColor ?? '#ffffff';
+          ctx.globalAlpha = shot.flash * (1 - lt / 0.2) * 0.85;
+          ctx.fillRect(0, 0, VW, VH);
+          ctx.globalAlpha = 1;
+        }
+        // fade out at the very end
+        if (t > TOTAL - 0.5) {
+          ctx.fillStyle = `rgba(0,0,0,${clamp((t - (TOTAL - 0.5)) / 0.5, 0, 1)})`;
+          ctx.fillRect(0, 0, VW, VH);
+        }
+        // fade in from black
+        if (t < 0.5) {
+          ctx.fillStyle = `rgba(0,0,0,${1 - t / 0.5})`;
+          ctx.fillRect(0, 0, VW, VH);
+        }
+        return c.toDataURL('image/jpeg', 0.93);
+      };
+      window.getSfx = () => sfxLog;
+      window.__ready = true;
+    </script>
+  </body>
+</html>

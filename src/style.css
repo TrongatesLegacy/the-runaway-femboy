@@ -695,7 +695,14 @@ input[type='range']:focus-visible {
 .tbtn-dash {
   background: radial-gradient(circle at 35% 30%, rgba(255, 255, 255, 0.35), rgba(255, 216, 74, 0.32) 60%, rgba(70, 50, 10, 0.4));
 }
+.pad-right {
+  position: relative;
+}
 .tbtn-slap {
+  /* floats beside JUMP so it never takes layout space while hidden */
+  position: absolute;
+  right: calc(100% + 14px);
+  bottom: 0;
   background: radial-gradient(circle at 35% 30%, rgba(255, 255, 255, 0.4), rgba(255, 179, 107, 0.45) 60%, rgba(90, 40, 10, 0.4));
   opacity: 0;
   transform: scale(0.6);
@@ -710,6 +717,23 @@ input[type='range']:focus-visible {
 @keyframes pulse {
   50% {
     box-shadow: 0 0 0 8px rgba(255, 179, 107, 0.25), 0 6px 18px rgba(0, 0, 0, 0.35);
+  }
+}
+@media (orientation: portrait) {
+  .tbtn-slap {
+    right: 8px;
+    bottom: calc(100% + 14px);
+  }
+}
+@media (max-width: 420px) {
+  .pad {
+    gap: 12px;
+  }
+  .tbtn {
+    --s: 74px;
+  }
+  .tbtn-jump {
+    --s: 96px;
   }
 }
 @media (max-height: 430px) {

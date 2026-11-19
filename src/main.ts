@@ -55,16 +55,16 @@ function layout() {
   canvas.width = Math.round(cssW * dpr);
   canvas.height = Math.round(cssH * dpr);
   const portrait = cssH > cssW;
-  const W = portrait ? 900 : clamp((720 * cssW) / cssH, 1100, 1700);
+  const W = portrait ? 820 : clamp((720 * cssW) / cssH, 1100, 1700);
   scale = Math.min(cssW / W, cssH / 720);
   const vw = cssW / scale, vh = cssH / scale;
-  hudScale = Math.max(1, 0.62 / scale);
+  hudScale = Math.max(1, (portrait ? 0.68 : 0.62) / scale);
   safeTop = parseFloat(getComputedStyle(safeProbe).paddingTop) || 0;
   if (game) {
     game.view.vw = vw;
     game.view.vh = vh;
-    game.view.oy = portrait ? (vh - 720) * (state === 'title' ? 0.86 : 0.38) : (vh - 720) * 0.5;
-    game.view.px = portrait ? 300 : clamp(vw * 0.33, 380, 520);
+    game.view.oy = portrait ? (vh - 720) * (state === 'title' ? 0.86 : 0.32) : (vh - 720) * 0.5;
+    game.view.px = portrait ? 270 : clamp(vw * 0.33, 380, 520);
   }
   document.body.classList.toggle('portrait', portrait);
 }

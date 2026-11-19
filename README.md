@@ -1,6 +1,8 @@
 # The Runaway Femboy
 
-[![The Runaway Femboy: Astray in a maid outfit running from a giant green mold monster past a bingus](public/og.png)](https://trongateslegacy.github.io/the-runaway-femboy/)
+[![The Runaway Femboy trailer: Astray in a maid outfit outruns a giant mold monster, stomps binguses, powers up with pickles, pies and pears, dodges mayo and gets home](public/trailer-preview.webp)](https://trongateslegacy.github.io/the-runaway-femboy/trailer.mp4)
+
+▶ **[Watch the trailer with sound](https://trongateslegacy.github.io/the-runaway-femboy/trailer.mp4)**
 
 A fan-made browser runner starring Astray (in a maid outfit). The Mold is right behind you. Run home, dodge pipes and binguses, avoid the mayo and get your regular back.
 
@@ -56,4 +58,6 @@ These need the dev server running and a local Google Chrome:
 
 - `node test/shoot.mjs [filter]`: screenshots of every screen (desktop, phone landscape, phone portrait) into `test/shots/`.
 - `node test/strip.mjs`: a film strip of a full bot playthrough.
+- `node scripts/make-trailer.mjs`: re-renders `public/trailer.mp4` (30s, 1080p, with music and SFX) and the README preview `public/trailer-preview.webp` from the game engine. Add `preview` for a quick contact sheet.
+- `node scripts/make-og.mjs`: re-renders the share image `public/og.png`.
 - `node test/playtest.mjs 6`: runs N full bot playthroughs and prints the ending, hits, closest mold distance and other stats.

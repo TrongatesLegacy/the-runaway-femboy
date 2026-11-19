@@ -260,7 +260,7 @@ export function drawHud(ctx: CanvasRenderingContext2D, g: Game, touch: boolean, 
       const key = touch ? h.touch : h.keys;
       ctx.save();
       ctx.translate(v.vw / 2, below + (narrow ? 100 : 16));
-      ctx.scale(a * (narrow ? 0.82 : 1), a * (narrow ? 0.82 : 1));
+      ctx.scale(a * (narrow ? 0.92 : 1), a * (narrow ? 0.92 : 1));
       ctx.font = '26px "Lilita One"';
       const kw = ctx.measureText(key).width;
       ctx.font = '22px "Fredoka"';
