@@ -19,11 +19,10 @@ npm run preview    # serve the built dist/
 
 Every push to `main` deploys to GitHub Pages through `.github/workflows/pages.yml`.
 
-`dist/` is a plain static folder, and all paths in it are relative. Any of these work:
+`dist/` is a plain static folder with relative paths, so it can also go anywhere else:
 
 - **itch.io**: zip the *contents* of `dist/`, upload it as an HTML game, and tick "Mobile friendly".
 - **Netlify / Vercel / Cloudflare Pages**: build command `npm run build`, publish directory `dist`.
-- **GitHub Pages**: push `dist/` to a `gh-pages` branch.
 
 ## Controls
 
