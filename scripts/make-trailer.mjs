@@ -81,13 +81,14 @@ const n = inputs.length / 2;
 const mix = filters.join(';') + ';' + Array.from({ length: n }, (_, i) => `[a${i}]`).join('') + `amix=inputs=${n}:normalize=0:dropout_transition=0,alimiter=limit=0.89,atrim=0:${total}[out]`;
 const audioFile = join(TMP, 'audio.m4a');
 execFileSync('ffmpeg', ['-loglevel', 'error', '-y', ...inputs, '-filter_complex', mix, '-map', '[out]', '-c:a', 'aac', '-b:a', '192k', audioFile]);
-execFileSync('ffmpeg', ['-loglevel', 'error', '-y', '-i', silent, '-i', audioFile, '-c:v', 'copy', '-c:a', 'copy', '-shortest', '-movflags', '+faststart', 'public/trailer.mp4']);
+// mux + embed the poster as cover art (players/OSes that show a thumbnail use it)
+execFileSync('ffmpeg', ['-loglevel', 'error', '-y', '-i', silent, '-i', audioFile, '-i', 'public/og.png', '-map', '0:v', '-map', '1:a', '-map', '2:v', '-c:v:0', 'copy', '-c:a', 'copy', '-c:v:1', 'mjpeg', '-disposition:v:1', 'attached_pic', '-t', String(total), '-movflags', '+faststart', 'public/trailer.mp4']);
 console.log('wrote public/trailer.mp4');
 
 // ---- README preview: animated WebP (no sound) of the whole trailer, via libwebp's img2webp
 const PF = join(TMP, 'pv');
 mkdirSync(PF, { recursive: true });
-execFileSync('ffmpeg', ['-loglevel', 'error', '-y', '-i', 'public/trailer.mp4', '-vf', 'fps=12,scale=720:-1:flags=lanczos', join(PF, 'f%04d.png')]);
+execFileSync('ffmpeg', ['-loglevel', 'error', '-y', '-i', 'public/trailer.mp4', '-map', '0:v:0', '-vf', 'fps=12,scale=720:-1:flags=lanczos', join(PF, 'f%04d.png')]);
 const pv = readdirSync(PF).filter((f) => f.endsWith('.png')).sort().map((f) => join(PF, f));
 execFileSync('img2webp', ['-loop', '0', '-lossy', '-q', '55', '-m', '6', '-d', String(Math.round(1000 / 12)), ...pv, '-o', 'public/trailer-preview.webp']);
 console.log('wrote public/trailer-preview.webp');

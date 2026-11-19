@@ -24,6 +24,11 @@
 
       await document.fonts.load('80px "Lilita One"');
       await document.fonts.load('600 20px "Fredoka"');
+      // poster art (public/og.png) used as the opening frame / thumbnail
+      const poster = new Image();
+      poster.src = '/og.png';
+      await poster.decode();
+      const POSTER_HOLD = 0.75, POSTER_FADE = 0.4;
 
       const FPS = 30;
       const W = 1920, H = 1080, S = H / 720, VW = W / S, VH = 720;
@@ -95,7 +100,7 @@
             cue('sfx/growl', 0.9, 0.85);
           },
           zoom: (t) => ({ z: 1.55 - t * 0.06, fx: 330 + t * 40, fy: 470 }),
-          caption: { text: 'SOMETHING IS GROWING…', at: 0.35, color: '#b6ee6c', pos: 'top', size: 64, style: 'whisper' },
+          caption: { text: 'SOMETHING IS GROWING…', at: 1.0, color: '#b6ee6c', pos: 'top', size: 64, style: 'whisper' },
           dark: (t) => 0.35 * (1 - clamp(t / 1.2, 0, 1)) + 0.15,
         },
         {
@@ -510,10 +515,14 @@
           ctx.fillStyle = `rgba(0,0,0,${clamp((t - (TOTAL - 0.5)) / 0.5, 0, 1)})`;
           ctx.fillRect(0, 0, VW, VH);
         }
-        // fade in from black
-        if (t < 0.5) {
-          ctx.fillStyle = `rgba(0,0,0,${1 - t / 0.5})`;
-          ctx.fillRect(0, 0, VW, VH);
+        // open on the poster (good thumbnail), then dissolve into the cold open
+        if (t < POSTER_HOLD + POSTER_FADE) {
+          const a = t < POSTER_HOLD ? 1 : 1 - (t - POSTER_HOLD) / POSTER_FADE;
+          const sc = Math.max(VW / poster.width, VH / poster.height) * (1 + t * 0.03);
+          const w = poster.width * sc, h = poster.height * sc;
+          ctx.globalAlpha = a;
+          ctx.drawImage(poster, (VW - w) / 2, (VH - h) / 2, w, h);
+          ctx.globalAlpha = 1;
         }
         return c.toDataURL('image/jpeg', 0.93);
       };
