@@ -1,5 +1,7 @@
 # The Runaway Femboy
 
+[![The Runaway Femboy: Astray in a maid outfit running from a giant green mold monster past a bingus](public/og.png)](https://trongateslegacy.github.io/the-runaway-femboy/)
+
 A fan-made browser runner starring Astray (in a maid outfit). The Mold is right behind you. Run home, dodge pipes and binguses, avoid the mayo and get your regular back.
 
 **Play it: https://trongateslegacy.github.io/the-runaway-femboy/**
