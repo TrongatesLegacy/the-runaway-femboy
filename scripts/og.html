@@ -1,0 +1,62 @@
+<!doctype html><html><head><meta charset="utf-8"><style>body{margin:0;background:#000}canvas{display:block}</style></head>
+<body><canvas id="c" width="1200" height="630"></canvas>
+<script type="module">
+import '@fontsource/lilita-one/400.css'; import '@fontsource/fredoka/600.css';
+import { getThemes, drawBackdrop, drawGround, drawDecor, GY } from '/src/art/backgrounds.ts';
+import { drawAstray, defaultPose } from '/src/art/character.ts';
+import * as T from '/src/art/things.ts';
+await document.fonts.load('80px "Lilita One"'); await document.fonts.load('600 20px "Fredoka"');
+const c = document.getElementById('c'); const ctx = c.getContext('2d');
+const S = 630 / 720, VW = 1200 / S;
+ctx.scale(S, S);
+const th = getThemes()[1];
+const camX = 2600, t = 1.7;
+drawBackdrop(ctx, th, camX, VW, 0, 720, t);
+drawGround(ctx, th, camX, VW, 720, t);
+ctx.save(); ctx.translate(-camX, 0);
+drawDecor(ctx, 'cone', camX + 1300, GY, t, 2);
+ctx.restore();
+// mold on the left
+T.drawMold(ctx, 250, -40, 760, GY, 2.2, 0.85, GY - 120);
+// stars arc + power bubbles
+for (let i = 0; i < 5; i++) T.drawStar(ctx, 600 + i * 56, GY - 120 - Math.sin(i / 4 * Math.PI) * 90, 0.4 + i * 0.3, i === 2);
+T.drawPowerBubble(ctx, 1095, GY - 170, 'pickle', 0.2);
+T.drawPowerBubble(ctx, 1205, GY - 215, 'pie', 0.9);
+T.drawPowerBubble(ctx, 1315, GY - 170, 'pear', 1.6);
+// a bingus waddling in, and one flying off
+const look = (i, acc) => ({ ...T.BINGUS_SKINS[i], eye: T.BINGUS_EYES[i], acc, accColor: T.ACC_COLORS[i][0], accColor2: T.ACC_COLORS[i][1] });
+ctx.fillStyle = 'rgba(0,0,0,0.25)'; ctx.beginPath(); ctx.ellipse(905, GY + 2, 46, 7, 0, 0, Math.PI * 2); ctx.fill();
+T.drawBingus(ctx, 900, GY, 'walk', look(0, 'sweater'), { t: 1.2, walk: 2.1, squash: 0, flying: false, spin: 0, dizzy: false, scared: 1 }, 1.45);
+// mayo puddle
+T.drawMayoPuddle(ctx, 720, GY, 120, 1, 2);
+// Astray mid-jump
+ctx.fillStyle = 'rgba(0,0,0,0.28)'; ctx.beginPath(); ctx.ellipse(470, GY + 2, 60, 9, 0, 0, Math.PI * 2); ctx.fill();
+drawAstray(ctx, 470, GY - 40, { ...defaultPose(), t: 1.3, air: 1, vy: -500, runAmt: 1, expr: 'panic', holdPie: false }, 1.75);
+// top gradient for the logo
+const g = ctx.createLinearGradient(0, 0, 0, 300); g.addColorStop(0, 'rgba(20,8,36,0.75)'); g.addColorStop(1, 'rgba(20,8,36,0)');
+ctx.fillStyle = g; ctx.fillRect(0, 0, VW, 300);
+// logo
+function word(text, x, y, size, top, bot, rot) {
+  ctx.save(); ctx.translate(x, y); ctx.rotate(rot);
+  ctx.font = `${size}px "Lilita One"`; ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic'; ctx.lineJoin = 'round';
+  ctx.fillStyle = 'rgba(42,20,32,0.6)'; ctx.fillText(text, 0, size * 0.09);
+  ctx.lineWidth = size * 0.2; ctx.strokeStyle = '#2a1420'; ctx.strokeText(text, 0, 0);
+  const gr = ctx.createLinearGradient(0, -size * 0.75, 0, 0); gr.addColorStop(0, top); gr.addColorStop(1, bot);
+  ctx.fillStyle = gr; ctx.fillText(text, 0, 0); ctx.restore();
+}
+const lx = 960;
+word('the', lx - 250, 92, 52, '#ffe98a', '#ffc83a', -0.14);
+word('RUNAWAY', lx, 178, 118, '#ffffff', '#ffb3d6', -0.06);
+word('FEMBOY', lx + 10, 290, 132, '#ffb8dc', '#e0388a', -0.06);
+ctx.save(); ctx.translate(lx + 270, 168); ctx.rotate(0.3); T.starPath(ctx, 34); ctx.fillStyle = '#ffd84a'; ctx.fill(); ctx.lineWidth = 7; ctx.strokeStyle = '#2a1420'; ctx.stroke(); ctx.restore();
+// tagline pill
+ctx.save(); ctx.translate(lx + 10, 352); ctx.rotate(-0.04);
+ctx.font = '600 28px "Fredoka"'; const tag = 'Outrun the mold · Avoid the mayo'; const w = ctx.measureText(tag).width + 48;
+ctx.fillStyle = 'rgba(30,16,52,0.85)'; ctx.strokeStyle = 'rgba(255,255,255,0.25)'; ctx.lineWidth = 2;
+ctx.beginPath(); ctx.roundRect(-w / 2, -26, w, 52, 26); ctx.fill(); ctx.stroke();
+ctx.fillStyle = '#fff4fa'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(tag, 0, 2); ctx.restore();
+// vignette
+const vg = ctx.createRadialGradient(VW / 2, 400, 300, VW / 2, 400, 900); vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(8,4,20,0.45)');
+ctx.fillStyle = vg; ctx.fillRect(0, 0, VW, 720);
+window.__done = true;
+</script></body></html>
