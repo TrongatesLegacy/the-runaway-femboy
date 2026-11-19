@@ -1,6 +1,6 @@
 import { TAU, clamp, easeOutBack, easeOutCubic, roundRect } from './util';
 import { drawAstrayHead } from './art/character';
-import { drawPear, drawPickle, starPath, POWER_COLORS, type PowerKind } from './art/things';
+import { drawKey, drawPear, drawPickle, drawRiceBowl, starPath, POWER_COLORS, type PowerKind } from './art/things';
 import { drawPie } from './art/character';
 import { END_X, STAGE_START, type Game } from './game';
 
@@ -99,6 +99,7 @@ export const HINTS: Record<string, { touch: string; keys: string; label: string 
   double: { touch: 'Tap ▲ twice', keys: 'Press ▲ twice', label: 'to DOUBLE JUMP' },
   slap: { touch: 'Tap  🥧', keys: 'X / F', label: 'to SLAP with the pie' },
   dash: { touch: 'Hold  ⚡', keys: 'Hold SHIFT / ►', label: 'to DASH away from the mold' },
+  key: { touch: '🔑', keys: '🔑', label: 'Somewhere on the rooftops is a private door…' },
 };
 
 export function drawHud(ctx: CanvasRenderingContext2D, g: Game, touch: boolean, safeTop: number, rightReserve: number) {
@@ -124,7 +125,7 @@ export function drawHud(ctx: CanvasRenderingContext2D, g: Game, touch: boolean, 
   if (m > 0.6) text(ctx, 'MAYO!', lx + lw - 20, top + 55, 14, '#ff8fa3', 'right', 'Lilita One', 0.25);
 
   // ---- power timers ----
-  const pows: [PowerKind, number, number][] = [
+  const pows: [Exclude<PowerKind, 'rice'>, number, number][] = [
     ['pickle', p.pickle, 6],
     ['pie', p.pie, 10],
     ['pear', p.pear, 6],
@@ -153,6 +154,35 @@ export function drawHud(ctx: CanvasRenderingContext2D, g: Game, touch: boolean, 
     else drawPie(ctx, px, y + 4, Math.PI, 0.75);
     ctx.restore();
     px += 64;
+  }
+  // brothy rice: shields + how full he is
+  if (p.shield > 0 || p.full > 0) {
+    const y = below + 26;
+    const w = Math.max(58 + Math.max(0, p.shield - 1) * 22, p.full >= 3 ? 104 : 0);
+    roundRect(ctx, px - 26, y - 26, w + 26, 52, 18);
+    ctx.fillStyle = 'rgba(22,12,40,0.8)';
+    ctx.fill();
+    for (let i = 0; i < Math.max(1, p.shield); i++) {
+      ctx.globalAlpha = p.shield > 0 ? 1 : 0.3;
+      drawRiceBowl(ctx, px + i * 22, y - 2, 0.62, t);
+    }
+    ctx.globalAlpha = 1;
+    for (let i = 0; i < 4; i++) {
+      ctx.beginPath();
+      ctx.arc(px - 10 + i * 12, y + 17, 3.6, 0, TAU);
+      ctx.fillStyle = i < p.full ? (p.full >= 3 ? '#ff6f7f' : '#ffdca8') : 'rgba(255,255,255,0.18)';
+      ctx.fill();
+    }
+    if (p.full >= 3 && Math.floor(t * 4) % 2 === 0) text(ctx, 'FULL!', px + 44, y + 17, 14, '#ff8f9f', 'left', 'Lilita One', 0.25);
+    px += w + 16;
+  }
+  if (p.hasKey) {
+    const y = below + 26;
+    ctx.beginPath();
+    ctx.arc(px, y, 26, 0, TAU);
+    ctx.fillStyle = 'rgba(22,12,40,0.8)';
+    ctx.fill();
+    drawKey(ctx, px, y, t * 0.3, 0.75);
   }
 
   // ---- progress track (top centre) ----
@@ -219,7 +249,7 @@ export function drawHud(ctx: CanvasRenderingContext2D, g: Game, touch: boolean, 
   ctx.fill();
   ctx.restore();
   // player head
-  drawAstrayHead(ctx, tx + tw * prog, ty + 2, 0.5, g.anger > 0.62 ? 'panic' : 'run', 'maid', t);
+  drawAstrayHead(ctx, tx + tw * prog, ty + 2, 0.5, g.anger > 0.62 ? 'panic' : 'run', g.outfit, t);
   // distance text
   const meters = Math.floor(p.x / 50);
   const total = Math.floor(END_X / 50);

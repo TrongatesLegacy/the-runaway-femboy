@@ -875,8 +875,8 @@ export function drawStar(ctx: CanvasRenderingContext2D, x: number, y: number, t:
   ctx.restore();
 }
 
-export type PowerKind = 'pickle' | 'pie' | 'pear';
-export const POWER_COLORS: Record<PowerKind, string> = { pickle: '#7ed957', pie: '#ffb36b', pear: '#ffe66b' };
+export type PowerKind = 'pickle' | 'pie' | 'pear' | 'rice';
+export const POWER_COLORS: Record<PowerKind, string> = { pickle: '#7ed957', pie: '#ffb36b', pear: '#ffe66b', rice: '#ffdca8' };
 
 export function drawPickle(ctx: CanvasRenderingContext2D, x: number, y: number, s = 1, rot = -0.6) {
   ctx.save();
@@ -977,6 +977,7 @@ export function drawPowerBubble(ctx: CanvasRenderingContext2D, x: number, y: num
   // icon
   if (kind === 'pickle') drawPickle(ctx, 0, 1, 0.95);
   else if (kind === 'pear') drawPear(ctx, 0, 2, 0.95);
+  else if (kind === 'rice') drawRiceBowl(ctx, 0, 6, 0.95, t);
   else drawPie(ctx, 0, 6, Math.PI, 1.45);
   // shine
   ctx.strokeStyle = 'rgba(255,255,255,0.9)';
@@ -1177,4 +1178,172 @@ export function drawMold(
     }
     ctx.restore();
   }
+}
+
+
+/** Steaming bowl of brothy rice. */
+export function drawRiceBowl(ctx: CanvasRenderingContext2D, x: number, y: number, s = 1, t = 0) {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.scale(s, s);
+  // steam
+  ctx.strokeStyle = 'rgba(255,255,255,0.75)';
+  ctx.lineWidth = 2;
+  ctx.lineCap = 'round';
+  for (let i = -1; i <= 1; i++) {
+    const w = Math.sin(t * 3 + i) * 2;
+    ctx.beginPath();
+    ctx.moveTo(i * 6, -14);
+    ctx.bezierCurveTo(i * 6 + 4 + w, -18, i * 6 - 4 - w, -22, i * 6 + w, -27);
+    ctx.stroke();
+  }
+  // rice mound + broth
+  ctx.beginPath();
+  ctx.ellipse(0, -6, 15, 7, 0, Math.PI, TAU);
+  fillOl(ctx, '#fffdf6', 1.8);
+  ctx.fillStyle = '#e8c27a';
+  ctx.beginPath();
+  ctx.ellipse(0, -5, 15, 3, 0, 0, TAU);
+  ctx.fill();
+  ctx.fillStyle = '#7ed957';
+  ctx.beginPath();
+  ctx.arc(-5, -9, 1.6, 0, TAU);
+  ctx.arc(4, -10, 1.4, 0, TAU);
+  ctx.fill();
+  ctx.fillStyle = '#f2a33a';
+  ctx.beginPath();
+  ctx.ellipse(7, -8, 3, 1.6, 0.3, 0, TAU);
+  ctx.fill();
+  // bowl
+  ctx.beginPath();
+  ctx.moveTo(-17, -5);
+  ctx.quadraticCurveTo(-15, 11, 0, 12);
+  ctx.quadraticCurveTo(15, 11, 17, -5);
+  ctx.closePath();
+  const g = ctx.createLinearGradient(0, -5, 0, 12);
+  g.addColorStop(0, '#ffffff');
+  g.addColorStop(1, '#dfe6f2');
+  fillOl(ctx, g, 2);
+  ctx.strokeStyle = '#e8384f';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(-15, 0);
+  ctx.quadraticCurveTo(0, 4, 15, 0);
+  ctx.stroke();
+  ctx.fillStyle = '#2f5fd0';
+  ctx.fillRect(-4, 11, 8, 3);
+  ctx.restore();
+}
+
+/** The golden key (secret ending). */
+export function drawKey(ctx: CanvasRenderingContext2D, x: number, y: number, t: number, s = 1) {
+  ctx.save();
+  ctx.translate(x, y + Math.sin(t * 3) * 4);
+  ctx.scale(s, s);
+  const gl = ctx.createRadialGradient(0, 0, 2, 0, 0, 46);
+  gl.addColorStop(0, 'rgba(255,230,120,0.55)');
+  gl.addColorStop(1, 'rgba(255,230,120,0)');
+  ctx.fillStyle = gl;
+  ctx.fillRect(-46, -46, 92, 92);
+  ctx.rotate(-0.6 + Math.sin(t * 2) * 0.15);
+  ctx.beginPath();
+  ctx.arc(-12, 0, 9, 0, TAU);
+  ctx.moveTo(-6, -3);
+  ctx.lineTo(18, -3);
+  ctx.lineTo(18, 3);
+  ctx.lineTo(14, 3);
+  ctx.lineTo(14, 9);
+  ctx.lineTo(10, 9);
+  ctx.lineTo(10, 3);
+  ctx.lineTo(6, 3);
+  ctx.lineTo(6, 7);
+  ctx.lineTo(2, 7);
+  ctx.lineTo(2, 3);
+  ctx.lineTo(-6, 3);
+  const g = ctx.createLinearGradient(0, -10, 0, 10);
+  g.addColorStop(0, '#fff3a0');
+  g.addColorStop(0.5, '#ffd84a');
+  g.addColorStop(1, '#c48a10');
+  ctx.fillStyle = g;
+  ctx.fill('evenodd');
+  ctx.lineWidth = 2.2;
+  ctx.strokeStyle = OL;
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.arc(-12, 0, 4, 0, TAU);
+  ctx.fillStyle = '#2a1a40';
+  ctx.fill();
+  ctx.stroke();
+  // sparkle
+  ctx.rotate(0.6);
+  const k = (t * 1.3) % 1;
+  ctx.globalAlpha = 1 - k;
+  starPath(ctx, 5 + k * 4);
+  ctx.translate(14, -14);
+  ctx.fillStyle = '#ffffff';
+  ctx.fill();
+  ctx.restore();
+}
+
+/** Mysterious rooftop door (opens with the golden key). */
+export function drawSecretDoor(ctx: CanvasRenderingContext2D, x: number, gy: number, t: number, open: number, unlockable: boolean) {
+  ctx.save();
+  ctx.translate(x, gy);
+  // little stair hut
+  ctx.beginPath();
+  ctx.rect(-70, -200, 140, 200);
+  const hg = ctx.createLinearGradient(0, -200, 0, 0);
+  hg.addColorStop(0, '#3b2d6b');
+  hg.addColorStop(1, '#2a2058');
+  fillOl(ctx, hg, 2.6);
+  ctx.beginPath();
+  ctx.moveTo(-82, -196);
+  ctx.lineTo(0, -236);
+  ctx.lineTo(82, -196);
+  ctx.closePath();
+  fillOl(ctx, '#4a3a82', 2.6);
+  // door glow
+  const glowA = unlockable ? 0.55 + 0.25 * Math.sin(t * 4) : 0.2;
+  ctx.globalCompositeOperation = 'lighter';
+  const gg = ctx.createRadialGradient(0, -70, 10, 0, -70, 140);
+  gg.addColorStop(0, `rgba(255,150,220,${glowA})`);
+  gg.addColorStop(1, 'rgba(255,150,220,0)');
+  ctx.fillStyle = gg;
+  ctx.fillRect(-140, -210, 280, 220);
+  ctx.globalCompositeOperation = 'source-over';
+  // door frame + light behind
+  ctx.fillStyle = '#ffd6f0';
+  ctx.fillRect(-34, -140, 68, 140);
+  ctx.save();
+  ctx.translate(-34, -140);
+  ctx.scale(1 - open * 0.85, 1);
+  ctx.beginPath();
+  ctx.rect(0, 0, 68, 140);
+  const dg = ctx.createLinearGradient(0, 0, 68, 0);
+  dg.addColorStop(0, '#6a2a5a');
+  dg.addColorStop(1, '#8e3a78');
+  fillOl(ctx, dg, 2.6);
+  // heart window + keyhole
+  ctx.translate(34, 40);
+  ctx.beginPath();
+  ctx.moveTo(0, 8);
+  ctx.bezierCurveTo(-14, -2, -8, -14, 0, -6);
+  ctx.bezierCurveTo(8, -14, 14, -2, 0, 8);
+  fillOl(ctx, unlockable ? '#ffb3e0' : '#c48bb0', 2);
+  ctx.translate(0, 46);
+  ctx.beginPath();
+  ctx.arc(0, 0, 5, 0, TAU);
+  ctx.moveTo(-3, 2);
+  ctx.lineTo(-5, 14);
+  ctx.lineTo(5, 14);
+  ctx.lineTo(3, 2);
+  ctx.fillStyle = '#1a0f20';
+  ctx.fill();
+  ctx.restore();
+  // sign
+  ctx.fillStyle = '#fff';
+  ctx.font = '13px "Lilita One", sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText(unlockable ? 'PRIVATE ♡' : '🔒 PRIVATE', 0, -156);
+  ctx.restore();
 }

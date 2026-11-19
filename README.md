@@ -43,10 +43,22 @@ Every push to `main` deploys to GitHub Pages through `.github/workflows/pages.ym
 - **Pickle Power**: speed boost and infinite stamina.
 - **Pie Power**: slap binguses, mayo jars, bottles and drips.
 - **Pear Power**: invincible; smash through everything.
-- **Endings**:
-  - **Home Safe**: reach the house. You get your regular outfit back.
-  - **Molded**: the mold catches you.
-  - **Mayo'd**: the mayo meter fills up (bad ending).
+- **Brothy Rice**: each bowl blocks one hit, but eat too much and he passes out.
+
+**6 endings:**
+- **Home Safe**: you get your regular outfit back.
+- **Molded**: the mold catches you.
+- **Mayo'd**: the mayo meter fills up.
+- **Food Coma**: too much brothy rice.
+- **Bonus ending**: hit by too many binguses.
+- **Secret ending**: find the golden key, then the private door.
+
+**13 outfits** unlock through achievements and endings. They're all in the **Wardrobe**:
+- Classic maid, his regular clothes, sailor-style Sky Maid, Goth Maid and Sakura Maid.
+- Pickle, Pie, Pear, Pipe, Mold, Mayo and Bingus fits.
+- Sleepy pyjamas.
+
+Progress is saved in the browser.
 
 ## Audio
 

@@ -559,6 +559,15 @@ input[type='range']:focus-visible {
 #result.mayo h2 {
   color: #fff1b0;
 }
+#result.secret h2 {
+  color: #ffb3e0;
+}
+#result.furry h2 {
+  color: #ff9fd6;
+}
+#result.coma h2 {
+  color: #ffdca8;
+}
 .result-card p {
   margin: 6px 0 14px;
   color: var(--muted);
@@ -826,5 +835,203 @@ input[type='range']:focus-visible {
   .logo-star,
   .loader span {
     animation: none;
+  }
+}
+
+/* ---------------- wardrobe ---------------- */
+.btn-wardrobe {
+  background: linear-gradient(180deg, #ffe98a, #ffc83a 60%, #e8a21a);
+  color: #2a1420;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5);
+  box-shadow: 0 5px 0 var(--ink), inset 0 2px 0 rgba(255, 255, 255, 0.5);
+}
+.btn-wardrobe small {
+  font-family: 'Fredoka', sans-serif;
+  font-weight: 700;
+  font-size: 0.7em;
+  margin-left: 6px;
+  opacity: 0.75;
+}
+.card-wide {
+  width: min(980px, 100%);
+}
+.wardrobe-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(124px, 1fr));
+  gap: 10px;
+  margin: 6px 0 16px;
+}
+.outfit {
+  font: inherit;
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.07);
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  border-radius: 18px;
+  padding: 8px 6px 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  cursor: pointer;
+  transition: transform 0.1s, border-color 0.15s, background 0.15s;
+  touch-action: manipulation;
+}
+.outfit:hover {
+  transform: translateY(-2px);
+  border-color: rgba(255, 159, 208, 0.6);
+}
+.outfit:focus-visible {
+  outline: 3px solid var(--cyan);
+  outline-offset: 2px;
+}
+.outfit canvas {
+  width: 88px;
+  height: 107px;
+}
+.outfit strong {
+  font-family: 'Lilita One', sans-serif;
+  font-weight: 400;
+  font-size: 16px;
+  line-height: 1.1;
+}
+.outfit span {
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.2;
+  min-height: 2.4em;
+}
+.outfit.selected {
+  background: rgba(255, 111, 174, 0.2);
+  border-color: var(--pink);
+  box-shadow: 0 0 0 3px rgba(255, 111, 174, 0.25);
+}
+.outfit.locked strong {
+  color: var(--muted);
+}
+.outfit .bar {
+  display: block;
+  width: 80%;
+  height: 6px;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.35);
+  overflow: hidden;
+  margin-top: 4px;
+}
+.outfit .bar b {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, var(--pink), var(--gold));
+}
+.outfit em {
+  font-style: normal;
+  font-size: 11px;
+  color: var(--muted);
+}
+.sub-h {
+  font-family: 'Lilita One', sans-serif;
+  font-weight: 400;
+  font-size: 24px;
+  margin: 4px 0 8px;
+}
+.sub-h small {
+  font-size: 0.7em;
+  color: var(--pink-2);
+}
+.endings-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.ending {
+  background: rgba(0, 0, 0, 0.25);
+  border: 2px dashed rgba(255, 255, 255, 0.15);
+  border-radius: 14px;
+  padding: 8px 10px;
+  text-align: left;
+}
+.ending b {
+  display: block;
+  font-family: 'Lilita One', sans-serif;
+  font-weight: 400;
+  font-size: 16px;
+  color: var(--muted);
+}
+.ending span {
+  font-size: 12px;
+  color: var(--muted);
+}
+.ending.found {
+  border-style: solid;
+  border-color: rgba(255, 216, 74, 0.5);
+  background: rgba(255, 216, 74, 0.1);
+}
+.ending.found b {
+  color: var(--gold);
+}
+.powers {
+  grid-template-columns: repeat(auto-fit, minmax(118px, 1fr));
+}
+
+/* ---------------- result unlocks ---------------- */
+.unlocks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+  margin: -4px 0 12px;
+}
+.unlocks:empty {
+  display: none;
+}
+.unlock {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: linear-gradient(90deg, rgba(255, 216, 74, 0.25), rgba(255, 111, 174, 0.2));
+  border: 2px solid rgba(255, 216, 74, 0.6);
+  border-radius: 14px;
+  padding: 4px 12px 4px 4px;
+  animation: pop 0.5s cubic-bezier(0.2, 1.6, 0.4, 1) 0.8s both;
+  text-align: left;
+}
+.unlock canvas {
+  width: 44px;
+  height: 55px;
+}
+.unlock span {
+  font-family: 'Lilita One', sans-serif;
+  font-size: 16px;
+  line-height: 1.1;
+}
+.unlock small {
+  display: block;
+  font-family: 'Fredoka', sans-serif;
+  font-weight: 700;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  color: var(--gold);
+}
+@keyframes pop {
+  from {
+    transform: scale(0.4);
+    opacity: 0;
+  }
+}
+
+@media (max-width: 520px) {
+  .wardrobe-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+  .outfit canvas {
+    width: 64px;
+    height: 78px;
+  }
+  .outfit strong {
+    font-size: 13px;
+  }
+  .outfit span {
+    font-size: 10.5px;
   }
 }

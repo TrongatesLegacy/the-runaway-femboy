@@ -10,6 +10,8 @@ import {
   drawMayoDrop,
   drawMayoJar,
   drawMayoPuddle,
+  drawKey,
+  drawSecretDoor,
   drawMold,
   drawOverPipe,
   drawPowerBubble,
@@ -37,7 +39,7 @@ export const END_X = 78000;
 const BASE_SPEED = [520, 575, 635];
 const MOLD_EMERGE = 1.4;
 
-export type EndKind = 'win' | 'molded' | 'mayo';
+export type EndKind = 'win' | 'molded' | 'mayo' | 'secret' | 'furry' | 'coma';
 
 export interface View {
   vw: number; // visible logical width
@@ -56,6 +58,11 @@ export interface Stats {
   time: number;
   dist: number;
   bestCombo: number;
+  pearSmashes: number;
+  pickles: number;
+  pipes: number;
+  rice: number;
+  binguHits: number;
 }
 
 interface Player {
@@ -91,6 +98,10 @@ interface Player {
   land: number;
   platform: Ent | null;
   stepSide: number;
+  shield: number; // brothy rice: absorbs hits
+  full: number; // brothy rice eaten (4 = food coma)
+  fullT: number;
+  hasKey: boolean;
 }
 
 export class Game {
@@ -122,6 +133,12 @@ export class Game {
   private nextPowerX = 0;
   private powerBag: PowerKind[] = [];
   private houseSpawned = false;
+  private nextRiceX = 0;
+  private keyX = 0;
+  private keySpawned = false;
+  private doorX = 0;
+  private doorSpawned = false;
+  outfit = 'maid';
   private ambientT = 0;
   themes: StageTheme[];
   view: View = { vw: 1280, vh: 720, oy: 0, px: 420 };
@@ -179,6 +196,10 @@ export class Game {
       land: 0,
       platform: null,
       stepSide: 0,
+      shield: 0,
+      full: 0,
+      fullT: 0,
+      hasKey: false,
     };
     this.moldX = -330;
     this.camX = -this.view.px;
@@ -187,7 +208,7 @@ export class Game {
     this.score = 0;
     this.combo = 0;
     this.comboT = 0;
-    this.stats = { stars: 0, bigStars: 0, stomps: 0, slaps: 0, hits: 0, powerups: 0, time: 0, dist: 0, bestCombo: 0 };
+    this.stats = { stars: 0, bigStars: 0, stomps: 0, slaps: 0, hits: 0, powerups: 0, time: 0, dist: 0, bestCombo: 0, pearSmashes: 0, pickles: 0, pipes: 0, rice: 0, binguHits: 0 };
     this.stage = 0;
     this.stageBanner = 0;
     this.started = attract;
@@ -202,6 +223,11 @@ export class Game {
     this.nextPowerX = 5200;
     this.powerBag = [];
     this.houseSpawned = false;
+    this.nextRiceX = 3200 + this.rng.range(0, 1500);
+    this.keyX = this.rng.range(30000, 42000);
+    this.keySpawned = false;
+    this.doorX = this.rng.range(58000, 70000);
+    this.doorSpawned = false;
   }
 
   get theme() {
@@ -239,6 +265,34 @@ export class Game {
         out: this.ents,
       };
       // power-ups on a schedule, from a shuffled bag so all three show up
+      if (!this.attract && !this.keySpawned && this.genX >= this.keyX) {
+        // a platform climb with the golden key at the top
+        this.keySpawned = true;
+        // deliberate 3-step climb; the key floats above the top step (out of reach from the ground)
+        let x = this.genX + 120;
+        const steps = [GY - 150, GY - 262, GY - 374];
+        for (let i = 0; i < steps.length; i++) {
+          const w = 200 - i * 20;
+          this.ents.push(ent('platform', x, steps[i], w, 18));
+          for (let k = 0; k < 3; k++) this.ents.push(ent('star', x + 30 + k * 55, steps[i] - 40, 26, 26));
+          if (i === steps.length - 1) this.ents.push(ent('key', x + w * 0.65, steps[i] - 120, 40, 40));
+          x += w + 130;
+        }
+        this.genX = x + BASE_SPEED[stage] * 1.2;
+        continue;
+      }
+      if (!this.attract && !this.doorSpawned && this.genX >= this.doorX) {
+        this.doorSpawned = true;
+        this.ents.push(ent('door', this.genX + 200, GY, 140, 200));
+        this.genX += 700;
+        continue;
+      }
+      if (!this.attract && this.genX >= this.nextRiceX) {
+        this.ents.push(ent('power', this.genX + 80, GY - this.rng.range(205, 250), 56, 56, { power: 'rice' }));
+        this.genX += 320;
+        this.nextRiceX = this.genX + this.rng.range(4200, 6800);
+        continue;
+      }
       if (this.genX >= this.nextPowerX && !this.attract) {
         if (!this.powerBag.length) this.powerBag = this.shuffle(['pickle', 'pie', 'pear'] as PowerKind[]);
         const kind = this.powerBag.pop()!;
@@ -354,6 +408,13 @@ export class Game {
     this.comboT -= dt;
     if (this.comboT <= 0) this.combo = 0;
     p.mayo = Math.max(0, p.mayo - dt * 1.6);
+    if (p.full > 0) {
+      p.fullT += dt;
+      if (p.fullT > 14) {
+        p.fullT = 0;
+        p.full--;
+      }
+    }
 
     // ---- dash / stamina ----
     const canDash = p.pickle > 0 || p.stamina > 0.02;
@@ -615,6 +676,17 @@ export class Game {
     }
     if (p.invuln > 0) return;
     e.hitDone = true;
+    if (e.type === 'bingus') this.bingusHit();
+    if (this.ending) return;
+    if (p.shield > 0) {
+      p.shield--;
+      p.invuln = 0.9;
+      this.fx.shake(5);
+      audio.play('sfx/bonk', { vol: 0.5, rate: 1.3 });
+      this.fx.popup('BLOCKED!', p.x + 20, p.y - 170, '#ffdca8', 34);
+      this.fx.add('ring', p.x, p.y - 70, { color: '#ffdca8', size: 90, max: 0.35 });
+      return;
+    }
     this.hitLog.push(`${e.type}${e.kind ? ':' + e.kind : ''}@${Math.round(p.x)}`);
     p.stumble = 0.45;
     p.invuln = 1.1;
@@ -632,9 +704,19 @@ export class Game {
     this.fx.burst('star', p.x + 10, p.y - 120, 7, 260, { color: '#fff3b0', size: 6, max: 0.6, g: 600 });
   }
 
+  private bingusHit() {
+    if (this.attract) return;
+    this.stats.binguHits++;
+    const n = this.stats.binguHits;
+    if (n === 3) this.fx.popup('the binguses really like you…', this.p.x + 20, this.p.y - 210, '#ff9fd6', 26);
+    if (n === 4) this.fx.popup('…maybe a little TOO much', this.p.x + 20, this.p.y - 210, '#ff9fd6', 26);
+    if (n >= 5) this.beginEnding('furry');
+  }
+
   private smash(e: Ent) {
     if (e.dead || e.hitDone) return;
     e.hitDone = true;
+    this.stats.pearSmashes++;
     e.dead = e.type !== 'bingus';
     this.fx.shake(7);
     audio.play('sfx/clang', { vol: 0.5, rate: 1.3 });
@@ -692,9 +774,38 @@ export class Game {
         case 'lowpipe':
         case 'tallpipe':
           if (!e.hitDone && over(box, e.x + 4, e.y - e.h - 14, e.x + e.w - 4, e.y)) this.hurt('clang', e);
+          if (!e.hitDone && !e.cleared && e.x + e.w < p.x - 24) {
+            e.cleared = true;
+            this.stats.pipes++;
+          }
+          break;
+        case 'key':
+          if (over(box, e.x - 26, e.y - 26, e.x + 26, e.y + 26)) {
+            e.dead = true;
+            p.hasKey = true;
+            audio.play('sfx/transform', { vol: 0.6 });
+            this.fx.popup('GOLDEN KEY!', e.x, e.y - 50, '#ffe66b', 44);
+            this.fx.burst('star', e.x, e.y, 20, 380, { color: '#ffe66b', size: 7, max: 0.8, g: 200 });
+            this.fx.doFlash('#ffe66b', 0.35);
+            this.hint = { key: 'key', t: 3 };
+          }
+          break;
+        case 'door':
+          if (!e.hitDone && p.x > e.x - 20 && p.x < e.x + 40) {
+            e.hitDone = true;
+            if (p.hasKey) this.beginEnding('secret');
+            else {
+              audio.play('sfx/clang', { vol: 0.35, rate: 1.6 });
+              this.fx.popup('LOCKED… needs a key', e.x, GY - 240, '#ffb3e0', 28);
+            }
+          }
           break;
         case 'overpipe': {
           if (!e.hitDone && over(box, e.x + 6, -1000, e.x + e.w - 6, e.y)) this.hurt('clang', e);
+          if (!e.hitDone && !e.cleared && e.x + e.w < p.x - 24) {
+            e.cleared = true;
+            this.stats.pipes++;
+          }
           if (e.nozzle && e.x > this.camX + 200 && e.x < this.camX + this.view.vw + 100) {
             e.timer = (e.timer ?? 0) + dt;
             if (e.timer > 1.15) {
@@ -987,7 +1098,23 @@ export class Game {
     this.fx.add('ring', x, y, { color: col, size: 110, max: 0.45 });
     this.fx.doFlash(col, 0.35);
     audio.play('sfx/powerup', { vol: 0.6 });
+    if (kind === 'rice') {
+      this.stats.rice++;
+      p.shield = Math.min(3, p.shield + 1);
+      p.full++;
+      p.fullT = 0;
+      audio.play('sfx/pickle', { vol: 0.5, rate: 0.8 });
+      if (p.full >= 4) {
+        this.fx.popup('SO… FULL…', x, y - 60, '#ffdca8', 42);
+        this.beginEnding('coma');
+      } else {
+        this.fx.popup(p.full === 3 ? 'BROTHY RICE! (getting full…)' : 'BROTHY RICE! +1 SHIELD', x, y - 60, '#ffdca8', p.full === 3 ? 30 : 36);
+      }
+      this.addScore(20, x, y, false);
+      return;
+    }
     if (kind === 'pickle') {
+      this.stats.pickles++;
       p.pickle = 6;
       p.stamina = 1;
       audio.play('sfx/pickle', { vol: 0.7 });
@@ -1072,6 +1199,12 @@ export class Game {
     } else if (k === 'mayo') {
       audio.play('sfx/splat', { vol: 1, rate: 0.7, minGap: 0 });
       this.fx.shake(10);
+    } else if (k === 'coma') {
+      audio.play('sfx/land', { vol: 0.6, rate: 0.6 });
+    } else if (k === 'furry') {
+      audio.play('sfx/meow1', { vol: 0.8, minGap: 0 });
+      audio.play('sfx/meow2', { vol: 0.8, minGap: 0, rate: 1.2 });
+      p.stumble = 0.6;
     } else {
       audio.play('sfx/transform', { vol: 0.7 });
     }
@@ -1100,6 +1233,30 @@ export class Game {
       p.x += p.vx * dt;
       if (Math.random() < dt * 60) this.fx.add('spore', p.x + (Math.random() - 0.5) * 140, p.y - Math.random() * 160, { vx: (Math.random() - 0.5) * 100, vy: -60, color: 'rgba(170,240,110,0.95)', size: 3 + Math.random() * 4, max: 1.2 });
       if (this.endT > 1.5 && this.endT - dt <= 1.5) this.onEnd?.('molded');
+    } else if (this.ending === 'secret') {
+      // walk into the secret door
+      p.vx = approach(p.vx, this.endT < 0.9 ? 200 : 0, 5, dt);
+      p.x += p.vx * dt;
+      p.phase += p.vx * dt * 0.0215;
+      p.runAmt = approach(p.runAmt, clamp(p.vx / 300, 0, 1), 6, dt);
+      p.y = Math.min(GY, p.y + 900 * dt);
+      this.moldX -= 300 * dt;
+      if (Math.random() < dt * 20) this.fx.add('heart', p.x + (Math.random() - 0.5) * 80, p.y - 80 - Math.random() * 80, { vy: -60, color: '#ff8fc8', size: 10, max: 1 });
+      if (this.endT > 1.6 && this.endT - dt <= 1.6) this.onEnd?.('secret');
+    } else if (this.ending === 'furry') {
+      p.vx = approach(p.vx, 0, 4, dt);
+      p.x += p.vx * dt;
+      p.runAmt = approach(p.runAmt, 0, 5, dt);
+      if (Math.random() < dt * 25) this.fx.add('heart', p.x + (Math.random() - 0.5) * 160, p.y - Math.random() * 160, { vy: -80, color: '#ff8fb8', size: 12, max: 1 });
+      if (this.endT > 1.6 && this.endT - dt <= 1.6) this.onEnd?.('furry');
+    } else if (this.ending === 'coma') {
+      p.vx = approach(p.vx, 0, 2.5, dt);
+      p.x += p.vx * dt;
+      p.phase += p.vx * dt * 0.0215;
+      p.runAmt = approach(p.runAmt, 0, 2, dt);
+      p.y = Math.min(GY, p.y + 900 * dt);
+      if (Math.random() < dt * 3) this.fx.popup('z', p.x + 30 + Math.random() * 20, p.y - 150, '#ffffff', 26);
+      if (this.endT > 1.8 && this.endT - dt <= 1.8) this.onEnd?.('coma');
     } else {
       p.vx = approach(p.vx, 0, 3, dt);
       p.x += p.vx * dt;
@@ -1258,9 +1415,15 @@ export class Game {
     pose.blink = p.blink;
     pose.holdPie = p.pie > 0;
     pose.mayo = p.mayo / 100;
-    pose.outfit = 'maid';
+    pose.outfit = this.outfit;
+    pose.belly = this.ending === 'coma' ? clamp(this.endT / 1.2, 0.3, 1) : p.full * 0.12;
+    if (this.ending === 'coma') pose.slide = clamp((this.endT - 0.6) / 0.6, 0, 1) * 0.7;
+    pose.ears = this.ending === 'furry' && this.endT > 0.5;
+    pose.tail = pose.ears;
     let expr: Expr = 'run';
     if (this.ending === 'mayo') expr = 'blank';
+    else if (this.ending === 'coma') expr = this.endT > 0.8 ? 'idle' : 'blank';
+    else if (this.ending === 'secret' || this.ending === 'furry') expr = 'happy';
     else if (this.ending === 'molded') expr = 'panic';
     else if (this.ending === 'win') expr = 'happy';
     else if (p.stumble > 0) expr = 'hurt';
@@ -1380,6 +1543,12 @@ export class Game {
         break;
       case 'power':
         drawPowerBubble(ctx, e.x, e.y, e.power!, this.t);
+        break;
+      case 'key':
+        drawKey(ctx, e.x, e.y, this.t);
+        break;
+      case 'door':
+        drawSecretDoor(ctx, e.x, e.y, this.t, this.ending === 'secret' ? clamp(this.endT / 0.7, 0, 1) : 0, this.p.hasKey);
         break;
       case 'house':
         drawHouse(ctx, e.x, e.y, this.t, this.ending === 'win' ? clamp(this.endT / 0.8, 0, 1) : 0);

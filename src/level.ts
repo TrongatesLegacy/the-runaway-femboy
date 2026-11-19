@@ -24,7 +24,9 @@ export type EType =
   | 'star'
   | 'power'
   | 'decor'
-  | 'house';
+  | 'house'
+  | 'key'
+  | 'door';
 
 export interface Ent {
   type: EType;
@@ -59,6 +61,7 @@ export interface Ent {
   hintShown?: boolean;
   rot?: number;
   stage?: number;
+  cleared?: boolean;
 }
 
 export function ent(type: EType, x: number, y: number, w: number, h: number, extra: Partial<Ent> = {}): Ent {

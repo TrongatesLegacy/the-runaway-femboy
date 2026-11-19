@@ -48,6 +48,7 @@
           <p class="tagline">Outrun the mold. Dodge the binguses. <b>Avoid the mayo.</b></p>
           <div class="menu">
             <button class="btn btn-primary" id="btn-play"><span>▶</span> Play</button>
+            <button class="btn btn-wardrobe" id="btn-wardrobe">Wardrobe</button>
             <div class="menu-row">
               <button class="btn btn-ghost" id="btn-howto">How to play</button>
               <button class="btn btn-ghost" id="btn-settings">Settings</button>
@@ -89,8 +90,9 @@
             <div class="power"><canvas data-icon="pickle" width="96" height="96"></canvas><b>Pickle Power</b><span>Speed boost + infinite stamina</span></div>
             <div class="power"><canvas data-icon="pie" width="96" height="96"></canvas><b>Pie Power</b><span>Slap binguses, jars and mayo away</span></div>
             <div class="power"><canvas data-icon="pear" width="96" height="96"></canvas><b>Pear Power</b><span>Invincible! Smash through anything</span></div>
+            <div class="power"><canvas data-icon="rice" width="96" height="96"></canvas><b>Brothy Rice</b><span>Blocks a hit… but don't overeat</span></div>
           </div>
-          <p class="tip">Stomp binguses for points. Collect ☆ to build combos. Mayo fills your meter — fill it up and it's a very bad ending.</p>
+          <p class="tip">Stomp binguses for points. Collect ☆ to build combos. Mayo fills your meter — fill it up and it's a very bad ending. There are <b>6 endings</b> and <b>13 outfits</b> to unlock — check the Wardrobe.</p>
           <button class="btn btn-primary" data-close>Got it!</button>
         </div>
       </div>
@@ -116,6 +118,17 @@
         </div>
       </div>
 
+      <div id="modal-wardrobe" class="modal" role="dialog" aria-modal="true" aria-labelledby="wardrobe-h">
+        <div class="card card-wide">
+          <h2 id="wardrobe-h">Wardrobe</h2>
+          <p class="lead">Unlock outfits with achievements. Your pick is what he runs in.</p>
+          <div id="wardrobe-grid" class="wardrobe-grid"></div>
+          <h3 class="sub-h">Endings <small id="endings-count"></small></h3>
+          <div id="endings-list" class="endings-list"></div>
+          <button class="btn btn-primary" data-close>Done</button>
+        </div>
+      </div>
+
       <div id="modal-pause" class="modal" role="dialog" aria-modal="true" aria-labelledby="pause-h">
         <div class="card card-small">
           <h2 id="pause-h">Paused</h2>
@@ -137,6 +150,7 @@
           <div class="stats" id="res-stats"></div>
           <div class="score-line"><span>Score</span><b id="res-score">0</b></div>
           <p class="newbest" id="res-best"></p>
+          <div class="unlocks" id="res-unlocks"></div>
           <div class="menu-row">
             <button class="btn btn-primary" id="btn-again">Run again</button>
             <button class="btn btn-ghost" id="btn-menu">Menu</button>

@@ -1,0 +1,18 @@
+<!doctype html><html><head><meta charset="utf-8"><style>body{margin:0;background:#2a2048}</style></head>
+<body><canvas id="c" width="1820" height="1300"></canvas>
+<script type="module">
+import '@fontsource/fredoka/600.css'; import '@fontsource/lilita-one/400.css';
+import { drawAstray, defaultPose } from '/src/art/character.ts';
+import { OUTFITS } from '/src/art/outfits.ts';
+await document.fonts.load('600 18px Fredoka'); await document.fonts.load('20px "Lilita One"');
+const c = document.getElementById('c'), ctx = c.getContext('2d');
+OUTFITS.forEach((o, i) => {
+  const x = 120 + (i % 7) * 260, y = 370 + Math.floor(i / 7) * 420;
+  drawAstray(ctx, x, y, { ...defaultPose(), t: 1.3, outfit: o.id, expr: i % 2 ? 'smug' : 'happy', runAmt: i % 3 === 0 ? 1 : 0, run: 1.4 }, 2);
+  ctx.fillStyle = '#fff'; ctx.font = '600 20px Fredoka'; ctx.textAlign = 'center'; ctx.fillText(o.name, x, y + 40);
+});
+['maid','sky','goth','sakura','sleepy','mold','bingus'].forEach((id, i) => {
+  drawAstray(ctx, 120 + i * 260, 1260, { ...defaultPose(), t: 1.3, outfit: id, expr: 'idle', blink: 1, belly: 1 }, 1.7);
+});
+window.__done = true;
+</script></body></html>

@@ -10,8 +10,12 @@ import { Game, END_X, type EndKind } from './game';
 import { drawCountdown, drawHud } from './hud';
 import { drawEndingScene } from './endings';
 import { drawPear, drawPickle } from './art/things';
-import { drawPie } from './art/character';
+import { drawPie as drawPieIcon } from './art/character';
 import { clamp, storage } from './util';
+import { progress, ENDINGS, outfitProgress, type EndingId } from './progress';
+import { OUTFITS, type OutfitId } from './art/outfits';
+import { drawAstray, defaultPose } from './art/character';
+import { drawRiceBowl } from './art/things';
 
 type State = 'loading' | 'title' | 'countdown' | 'play' | 'paused' | 'result';
 
@@ -37,6 +41,8 @@ let resultShown = false;
 let pausedFrom: State = 'play';
 let frozen = false;
 let runId = 0;
+let freshUnlocks: OutfitId[] = [];
+const sceneDelay = (k: EndKind) => (k === 'win' || k === 'secret' || k === 'coma' ? 1.7 : 0.9);
 const slapBtn = document.querySelector('.tbtn-slap') as HTMLElement;
 let slapOn = false;
 const SETTINGS_KEY = 'trf.settings.v1';
@@ -130,8 +136,10 @@ function toTitle() {
   state = 'title';
   layout();
   game.reset(true);
+  game.outfit = progress.outfit;
   game.p.vx = 380;
   endKind = null;
+  updateWardrobeButton();
   show('#title', true);
   show('#result', false);
   show('#btn-pause', false);
@@ -155,8 +163,10 @@ function startRun() {
   audio.release(['music/title', 'music/stage3', 'ambient/night']);
   audio.prefetch(['music/stage2', 'ambient/city']);
   game.reset(false);
+  game.outfit = progress.outfit;
   endKind = null;
   resultShown = false;
+  freshUnlocks = [];
   state = 'countdown';
   layout();
   countdown = 0;
@@ -197,14 +207,19 @@ function onEnd(kind: EndKind) {
   show('#btn-pause', false);
   show('#touch', false);
   audio.stopAllAmbient(1);
-  const jingle = kind === 'win' ? 'music/win' : kind === 'molded' ? 'music/lose' : 'music/mayo';
+  const jingle = kind === 'win' || kind === 'secret' || kind === 'furry' ? 'music/win' : kind === 'molded' ? 'music/lose' : 'music/mayo';
+  const st = game.stats;
+  freshUnlocks = progress.commitRun(
+    { stars: st.stars, stomps: st.stomps, slaps: st.slaps, pearSmashes: st.pearSmashes, pickles: st.pickles, pipes: st.pipes, rice: st.rice },
+    kind as EndingId,
+  );
   audio.playMusic(jingle, 0.2);
   audio.prefetch(['music/title']);
   window.setTimeout(() => {
     if (state === 'result' && runId === id) audio.playMusic('music/title', 2.5, 0.7);
-  }, kind === 'win' ? 9000 : 5000);
+  }, kind === 'win' || kind === 'secret' ? 9000 : 5000);
   if (kind === 'molded') audio.setAmbient('ambient/mold', 0.6, 1);
-  window.setTimeout(() => runId === id && showResult(), kind === 'win' ? 1700 : 900);
+  window.setTimeout(() => runId === id && showResult(), sceneDelay(kind) * 1000);
 }
 
 function showResult() {
@@ -212,18 +227,23 @@ function showResult() {
   resultShown = true;
   const s = game.stats;
   const r = $('#result');
-  r.classList.remove('win', 'molded', 'mayo');
+  r.classList.remove('win', 'molded', 'mayo', 'secret', 'furry', 'coma');
   r.classList.add(endKind);
   const titles: Record<EndKind, [string, string]> = {
     win: ['HOME SAFE!', 'He got his regular back ☆'],
     molded: ['MOLDED!', 'The mold caught up. Fuzzy and green forever…'],
     mayo: ["MAYO'D!", 'Covered head to toe in mayo. Bad ending.'],
+    secret: ['SECRET ENDING ♡', 'Turns out… he secretly loves dressing up.'],
+    furry: ['BONUS ENDING!', 'Too many binguses. Turns out he’s secretly a furry.'],
+    coma: ['FOOD COMA!', 'Way too much brothy rice. He passed out. Zzz…'],
   };
   $('#res-title').textContent = titles[endKind][0];
   $('#res-sub').textContent = titles[endKind][1];
-  const score = game.score + Math.floor(game.p.x / 50) + (endKind === 'win' ? 1000 : 0);
+  const score = game.score + Math.floor(game.p.x / 50) + (endKind === 'win' ? 1000 : endKind === 'secret' ? 1500 : 0);
+  const special: Partial<Record<EndKind, string>> = { secret: '♡', furry: 'nya', coma: 'Zz' };
   const rank =
-    endKind !== 'win'
+    special[endKind] ??
+    (endKind !== 'win'
       ? `${Math.round(clamp(game.p.x / END_X, 0, 1) * 100)}%`
       : score >= 5200 && s.hits <= 2
         ? 'S'
@@ -231,7 +251,7 @@ function showResult() {
           ? 'A'
           : score >= 2600
             ? 'B'
-            : 'C';
+            : 'C');
   const rk = $('#res-rank');
   rk.textContent = rank;
   rk.style.fontSize = rank.length > 2 ? '21px' : rank.length > 1 ? '28px' : '';
@@ -252,6 +272,12 @@ function showResult() {
     storage.set(BEST_KEY, score);
     $('#res-best').textContent = best ? '★ New best score! ★' : '';
   } else $('#res-best').textContent = `Best: ${best.toLocaleString()}`;
+  const un = $('#res-unlocks');
+  un.innerHTML = freshUnlocks
+    .map((o) => `<div class="unlock"><canvas data-outfit="${o}" width="120" height="150"></canvas><span><small>NEW OUTFIT</small>${OUTFITS.find((d) => d.id === o)?.name ?? o}</span></div>`)
+    .join('');
+  un.querySelectorAll<HTMLCanvasElement>('canvas[data-outfit]').forEach((c) => paintOutfit(c, c.dataset.outfit as OutfitId, true));
+  if (freshUnlocks.length) window.setTimeout(() => audio.play('sfx/powerup', { vol: 0.6 }), 900);
   show('#result', true);
   const id = runId;
   window.setTimeout(() => {
@@ -311,12 +337,14 @@ function tick(dt: number) {
 function render() {
   ctx.setTransform(dpr * scale, 0, 0, dpr * scale, 0, 0);
   const v = game.view;
-  if (state === 'result' && endKind && endSceneT > (endKind === 'win' ? 1.7 : 0.9)) {
+  if (state === 'result' && endKind && endSceneT > sceneDelay(endKind)) {
     // ending vignette scene
-    const k = clamp((endSceneT - (endKind === 'win' ? 1.7 : 0.9)) / 0.5, 0, 1);
-    drawEndingScene(ctx, endKind, v.vw, v.vh, endSceneT - (endKind === 'win' ? 1.7 : 0.9));
+    const d = sceneDelay(endKind);
+    const k = clamp((endSceneT - d) / 0.5, 0, 1);
+    drawEndingScene(ctx, endKind, v.vw, v.vh, endSceneT - d, progress.outfit);
     if (k < 1) {
-      ctx.fillStyle = endKind === 'win' ? `rgba(255,248,240,${1 - k})` : endKind === 'mayo' ? `rgba(255,249,228,${1 - k})` : `rgba(14,40,18,${(1 - k) * 0.85})`;
+      const fade: Record<EndKind, string> = { win: '255,248,240', secret: '255,220,240', furry: '255,200,225', coma: '20,14,40', mayo: '255,249,228', molded: '14,40,18' };
+      ctx.fillStyle = `rgba(${fade[endKind]},${(1 - k) * 0.9})`;
       ctx.fillRect(0, 0, v.vw, v.vh);
     }
     return;
@@ -360,6 +388,10 @@ function wireUi() {
   $('#btn-again').addEventListener('click', startRun);
   $('#btn-menu').addEventListener('click', toTitle);
   $('#btn-howto').addEventListener('click', () => openModal('#modal-howto'));
+  $('#btn-wardrobe').addEventListener('click', () => {
+    buildWardrobe();
+    openModal('#modal-wardrobe');
+  });
   $('#btn-settings').addEventListener('click', () => openModal('#modal-settings'));
   $('#btn-pause').addEventListener('click', pause);
   $('#btn-resume').addEventListener('click', resume);
@@ -475,7 +507,8 @@ function wireUi() {
     const k = c.dataset.icon;
     if (k === 'pickle') drawPickle(x, 24, 24, 0.95);
     else if (k === 'pear') drawPear(x, 24, 26, 0.95);
-    else drawPie(x, 24, 30, Math.PI, 1.2);
+    else if (k === 'rice') drawRiceBowl(x, 24, 30, 1.15, 0.5);
+    else drawPieIcon(x, 24, 30, Math.PI, 1.2);
   });
 }
 
@@ -509,6 +542,7 @@ async function boot() {
   layout();
   wireUi();
   toTitle();
+  buildWardrobe();
   show('#loading', false);
   requestAnimationFrame(frame);
 
@@ -548,3 +582,63 @@ async function boot() {
 }
 
 void boot();
+
+
+// ---------------------------------------------------------------------
+// wardrobe
+// ---------------------------------------------------------------------
+function paintOutfit(c: HTMLCanvasElement, id: OutfitId, unlocked: boolean) {
+  const x = c.getContext('2d')!;
+  const w = c.width, h = c.height;
+  x.clearRect(0, 0, w, h);
+  const sc = h / 105;
+  drawAstray(x, w / 2 - 2, h - 8, { ...defaultPose(), t: 1.3, outfit: id, expr: id === 'regular' ? 'happy' : 'smug' }, sc * 0.55);
+  if (!unlocked) {
+    x.globalCompositeOperation = 'source-atop';
+    x.fillStyle = '#1a1030';
+    x.fillRect(0, 0, w, h);
+    x.globalCompositeOperation = 'source-over';
+  }
+}
+
+function updateWardrobeButton() {
+  const n = OUTFITS.filter((o) => progress.isUnlocked(o.id)).length;
+  const b = document.getElementById('btn-wardrobe');
+  if (b) b.innerHTML = `Wardrobe <small>${n}/${OUTFITS.length}</small>`;
+}
+
+function buildWardrobe() {
+  const grid = $('#wardrobe-grid');
+  grid.innerHTML = '';
+  for (const o of OUTFITS) {
+    const unlocked = progress.isUnlocked(o.id);
+    const [cur, max] = outfitProgress(progress.data, o.id);
+    const card = document.createElement('button');
+    card.className = 'outfit' + (unlocked ? '' : ' locked') + (progress.outfit === o.id ? ' selected' : '');
+    card.type = 'button';
+    card.setAttribute('aria-label', unlocked ? `Wear ${o.name}` : `${o.name} (locked: ${o.how})`);
+    const prog = !unlocked && max > 1 ? `<i class="bar"><b style="width:${Math.min(100, (cur / max) * 100)}%"></b></i><em>${Math.min(cur, max)}/${max}</em>` : '';
+    card.innerHTML = `<canvas width="132" height="160"></canvas><strong>${unlocked ? o.name : '???'}</strong><span>${unlocked ? (progress.outfit === o.id ? 'Wearing' : 'Tap to wear') : '🔒 ' + o.how}</span>${prog}`;
+    paintOutfit(card.querySelector('canvas')!, o.id, unlocked);
+    card.addEventListener('click', () => {
+      audio.unlock();
+      if (!unlocked) {
+        audio.play('sfx/bonk', { vol: 0.4, rate: 1.4 });
+        return;
+      }
+      progress.setOutfit(o.id);
+      game.outfit = o.id;
+      audio.play('sfx/transform', { vol: 0.5 });
+      buildWardrobe();
+      updateWardrobeButton();
+    });
+    grid.appendChild(card);
+  }
+  const ends = $('#endings-list');
+  ends.innerHTML = ENDINGS.map((e) => {
+    const n = progress.data.endings[e.id] ?? 0;
+    return `<div class="ending${n ? ' found' : ''}"><b>${n ? e.name : '???'}</b><span>${n ? `Seen ${n}×` : e.hint}</span></div>`;
+  }).join('');
+  const found = ENDINGS.filter((e) => (progress.data.endings[e.id] ?? 0) > 0).length;
+  $('#endings-count').textContent = `${found}/${ENDINGS.length}`;
+}

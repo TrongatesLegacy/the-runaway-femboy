@@ -1,0 +1,22 @@
+import puppeteer from 'puppeteer-core';
+const browser = await puppeteer.launch({ executablePath: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', headless: 'new' });
+const p = await browser.newPage();
+await p.setViewport({ width: 1440, height: 900 });
+p.on('pageerror', (e) => console.log('[pageerror]', e.message));
+await p.goto('http://localhost:5199/', { waitUntil: 'networkidle0' });
+await p.waitForFunction('window.__done === true');
+const r = await p.evaluate(() => {
+  __trf.freeze(true); __trf.startRun(); __trf.step(3.5);
+  const g = __trf.game;
+  __trf.warp(g.keyX - 700);
+  g.ents = []; g.genX = g.keyX; g.keySpawned = false;
+  __trf.step(0.6);
+  const key = g.ents.find((e) => e.type === 'key');
+  const plats = g.ents.filter((e) => e.type === 'platform').map((e) => [Math.round(e.x - g.p.x), e.y]);
+  return { key: key && [Math.round(key.x - g.p.x), key.y], plats };
+});
+console.log(JSON.stringify(r));
+await new Promise((r) => setTimeout(r, 600));
+await p.evaluate(() => __trf.render());
+await p.screenshot({ path: 'test/shots/f-key.png' });
+await browser.close();

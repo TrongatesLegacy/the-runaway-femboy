@@ -1,6 +1,6 @@
 import { TAU, clamp, easeOutBack, makeCanvas } from './util';
 import { defaultPose, drawAstray, type Pose } from './art/character';
-import { drawBingus, drawMayoJar, drawMold, starPath } from './art/things';
+import { drawBingus, drawMayoJar, drawMold, drawRiceBowl, starPath, BINGUS_SKINS, BINGUS_EYES, ACC_COLORS, type BingusLook } from './art/things';
 import type { EndKind } from './game';
 
 const confetti = Array.from({ length: 90 }, (_, i) => ({
@@ -30,14 +30,22 @@ function drawTinted(ctx: CanvasRenderingContext2D, x: number, y: number, pose: P
   ctx.drawImage(tintBuf.c, x - 210, y - 480);
 }
 
-export function drawEndingScene(ctx: CanvasRenderingContext2D, kind: EndKind, vw: number, vh: number, t: number) {
+let OUTFIT = 'maid';
+
+export function drawEndingScene(ctx: CanvasRenderingContext2D, kind: EndKind, vw: number, vh: number, t: number, outfit = 'maid') {
+  OUTFIT = outfit;
   const cx = vw * (vw > vh ? 0.3 : 0.5);
   const floor = vw > vh ? vh * 0.82 : vh * 0.5;
   const s = clamp(Math.min(vw, vh) / 300, 1.6, 3.2);
   if (kind === 'win') drawWin(ctx, vw, vh, t, cx, floor, s);
   else if (kind === 'molded') drawMolded(ctx, vw, vh, t, cx, floor, s);
+  else if (kind === 'secret') drawSecret(ctx, vw, vh, t, cx, floor, s);
+  else if (kind === 'furry') drawFurry(ctx, vw, vh, t, cx, floor, s);
+  else if (kind === 'coma') drawComa(ctx, vw, vh, t, cx, floor, s);
   else drawMayo(ctx, vw, vh, t, cx, floor, s);
 }
+
+const maidish = (o: string) => (o === 'regular' ? 'maid' : o);
 
 function drawWin(ctx: CanvasRenderingContext2D, vw: number, vh: number, t: number, cx: number, floor: number, s: number) {
   // cozy bedroom
@@ -153,7 +161,7 @@ function drawWin(ctx: CanvasRenderingContext2D, vw: number, vh: number, t: numbe
   const trans = clamp(t / 1.1, 0, 1);
   const pose = { ...defaultPose(), t, expr: 'happy' as const };
   if (trans < 1) {
-    pose.outfit = 'maid';
+    pose.outfit = maidish(OUTFIT);
     pose.spin = 0;
     ctx.save();
     ctx.translate(cx, floor);
@@ -218,7 +226,7 @@ function drawMolded(ctx: CanvasRenderingContext2D, vw: number, vh: number, t: nu
     ctx.fill();
   }
   // Astray, fuzzy and green, stuck in the mold
-  const pose = { ...defaultPose(), t, expr: 'panic' as const, stumble: 1 };
+  const pose = { ...defaultPose(), t, expr: 'panic' as const, stumble: 1, outfit: OUTFIT };
   const amt = clamp(t / 1.5, 0, 0.55);
   ctx.save();
   ctx.translate(cx, floor);
@@ -302,7 +310,7 @@ function drawMayo(ctx: CanvasRenderingContext2D, vw: number, vh: number, t: numb
   ctx.lineWidth = 3;
   ctx.stroke();
   // Astray sitting, blank stare, covered
-  const pose = { ...defaultPose(), t, expr: 'blank' as const, mayo: 1, slide: 0.55 };
+  const pose = { ...defaultPose(), t, expr: 'blank' as const, mayo: 1, slide: 0.55, outfit: OUTFIT };
   drawAstray(ctx, cx, floor + 4, pose, s);
   // splash where the stream lands
   ctx.fillStyle = '#fffdf2';
@@ -341,4 +349,242 @@ function drawMayo(ctx: CanvasRenderingContext2D, vw: number, vh: number, t: numb
   ctx.lineTo(vw, 0);
   ctx.fill();
   void easeOutBack;
+}
+
+
+function heart(ctx: CanvasRenderingContext2D, x: number, y: number, r: number, color: string) {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.scale(r / 10, r / 10);
+  ctx.beginPath();
+  ctx.moveTo(0, 6);
+  ctx.bezierCurveTo(-12, -2, -8, -12, 0, -5);
+  ctx.bezierCurveTo(8, -12, 12, -2, 0, 6);
+  ctx.fillStyle = color;
+  ctx.fill();
+  ctx.restore();
+}
+
+/** Secret ending: a private dressing room — he secretly loves the outfit. */
+function drawSecret(ctx: CanvasRenderingContext2D, vw: number, vh: number, t: number, cx: number, floor: number, s: number) {
+  const wall = ctx.createLinearGradient(0, 0, 0, floor);
+  wall.addColorStop(0, '#ffd0ea');
+  wall.addColorStop(1, '#f7a8d0');
+  ctx.fillStyle = wall;
+  ctx.fillRect(0, 0, vw, floor);
+  // heart wallpaper
+  for (let y = 30; y < floor - 10; y += 64)
+    for (let x = ((y / 64) % 2) * 40 + 20; x < vw; x += 80) heart(ctx, x, y, 7, 'rgba(255,255,255,0.45)');
+  const fl = ctx.createLinearGradient(0, floor, 0, vh);
+  fl.addColorStop(0, '#c98aa8');
+  fl.addColorStop(1, '#8e5a78');
+  ctx.fillStyle = fl;
+  ctx.fillRect(0, floor, vw, vh - floor);
+  // clothes rack with dresses in the back
+  const rx = vw * 0.04;
+  ctx.strokeStyle = '#c9a24a';
+  ctx.lineWidth = 6;
+  ctx.beginPath();
+  ctx.moveTo(rx, floor * 0.3);
+  ctx.lineTo(rx + vw * 0.16, floor * 0.3);
+  ctx.stroke();
+  const cols = ['#211c2e', '#8fc4f0', '#f59cbe', '#a99ae0', '#e8c62f'];
+  cols.forEach((c, i) => {
+    const dx = rx + 14 + i * (vw * 0.16 - 20) / 4;
+    ctx.fillStyle = c;
+    ctx.beginPath();
+    ctx.moveTo(dx - 8, floor * 0.3 + 6);
+    ctx.lineTo(dx + 8, floor * 0.3 + 6);
+    ctx.lineTo(dx + 16, floor * 0.3 + 90);
+    ctx.lineTo(dx - 16, floor * 0.3 + 90);
+    ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,0.85)';
+    ctx.fillRect(dx - 5, floor * 0.3 + 22, 10, 50);
+  });
+  // vanity mirror with reflection
+  const mx = cx + 115 * s * 0.6, my = floor - 105 * s * 0.6;
+  const mw = 70 * s * 0.6, mh = 105 * s * 0.6;
+  ctx.save();
+  ctx.beginPath();
+  ctx.ellipse(mx, my, mw, mh, 0, 0, TAU);
+  ctx.fillStyle = '#e9f4ff';
+  ctx.fill();
+  ctx.clip();
+  const mg = ctx.createLinearGradient(mx - mw, my - mh, mx + mw, my + mh);
+  mg.addColorStop(0, '#f4f9ff');
+  mg.addColorStop(1, '#cfe0f2');
+  ctx.fillStyle = mg;
+  ctx.fillRect(mx - mw, my - mh, mw * 2, mh * 2);
+  ctx.globalAlpha = 0.85;
+  const rpose = { ...defaultPose(), t, expr: 'happy' as const, outfit: maidish(OUTFIT), wave: 1 };
+  drawAstray(ctx, mx + 10, floor + 30, rpose, s * 0.95, -1);
+  ctx.globalAlpha = 0.45;
+  ctx.fillStyle = '#ffffff';
+  ctx.beginPath();
+  ctx.moveTo(mx - mw * 0.6, my - mh);
+  ctx.lineTo(mx - mw * 0.2, my - mh);
+  ctx.lineTo(mx - mw * 0.9, my + mh);
+  ctx.lineTo(mx - mw * 1.3, my + mh);
+  ctx.fill();
+  ctx.restore();
+  ctx.lineWidth = 10;
+  ctx.strokeStyle = '#e8b84a';
+  ctx.beginPath();
+  ctx.ellipse(mx, my, mw, mh, 0, 0, TAU);
+  ctx.stroke();
+  ctx.lineWidth = 3;
+  ctx.strokeStyle = '#2a1420';
+  ctx.stroke();
+  // Astray twirling, blushing
+  const pose = { ...defaultPose(), t, expr: 'happy' as const, outfit: maidish(OUTFIT), wave: 1 };
+  ctx.save();
+  ctx.translate(cx, floor);
+  const tw = Math.sin(t * 2.5) * 0.06;
+  ctx.rotate(tw);
+  drawAstray(ctx, 0, 0, pose, s);
+  ctx.restore();
+  // extra blush + floating hearts and sparkles
+  for (let i = 0; i < 14; i++) {
+    const k = (t * 0.35 + i / 14) % 1;
+    const hx = cx - 120 + ((i * 53) % 240);
+    heart(ctx, hx + Math.sin(t * 2 + i) * 14, floor - 40 - k * floor * 0.8, 8 + (i % 3) * 4, `rgba(255,${100 + (i % 3) * 40},${170 + (i % 2) * 40},${1 - k})`);
+  }
+  for (let i = 0; i < 8; i++) {
+    const a = t * 1.5 + i * 0.8;
+    ctx.save();
+    ctx.translate(mx + Math.cos(a) * mw * 1.15, my + Math.sin(a) * mh * 1.1);
+    starPath(ctx, 5 + (i % 3) * 2);
+    ctx.fillStyle = '#fff6b0';
+    ctx.fill();
+    ctx.restore();
+  }
+}
+
+const furLook = (i: number, acc: BingusLook['acc']): BingusLook => ({
+  ...BINGUS_SKINS[i % BINGUS_SKINS.length],
+  eye: BINGUS_EYES[i % BINGUS_EYES.length],
+  acc,
+  accColor: ACC_COLORS[i % ACC_COLORS.length][0],
+  accColor2: ACC_COLORS[i % ACC_COLORS.length][1],
+});
+
+/** Bonus ending: buried in binguses, cat ears and tail — secretly a furry. */
+function drawFurry(ctx: CanvasRenderingContext2D, vw: number, vh: number, t: number, cx: number, floor: number, s: number) {
+  const bg = ctx.createRadialGradient(cx, floor - 120, 40, cx, floor - 120, Math.max(vw, vh));
+  bg.addColorStop(0, '#ffe0ef');
+  bg.addColorStop(1, '#f59cbe');
+  ctx.fillStyle = bg;
+  ctx.fillRect(0, 0, vw, vh);
+  // paw-print pattern
+  ctx.fillStyle = 'rgba(255,255,255,0.4)';
+  for (let y = 40; y < vh; y += 90)
+    for (let x = ((y / 90) % 2) * 55 + 30; x < vw; x += 110) {
+      ctx.beginPath();
+      ctx.ellipse(x, y, 9, 7, 0, 0, TAU);
+      ctx.arc(x - 9, y - 10, 3.5, 0, TAU);
+      ctx.arc(x - 3, y - 14, 3.5, 0, TAU);
+      ctx.arc(x + 3, y - 14, 3.5, 0, TAU);
+      ctx.arc(x + 9, y - 10, 3.5, 0, TAU);
+      ctx.fill();
+    }
+  ctx.fillStyle = '#f2a7c6';
+  ctx.fillRect(0, floor, vw, vh - floor);
+  // binguses behind
+  const st = (k: number) => ({ t: t + k, walk: 0, squash: 0, flying: false, spin: 0, dizzy: false });
+  drawBingus(ctx, cx - 110 * s * 0.5, floor, 'walk', furLook(1, 'bow'), st(0.3), s * 0.75);
+  drawBingus(ctx, cx + 120 * s * 0.5, floor, 'chonk', furLook(2, 'sweater'), st(0.7), s * 0.6);
+  // Astray with ears + tail, happy wave
+  const pose = { ...defaultPose(), t, expr: 'happy' as const, outfit: OUTFIT, ears: true, tail: true, wave: 1 };
+  drawAstray(ctx, cx, floor, pose, s);
+  // binguses in front / on top
+  drawBingus(ctx, cx - 60 * s * 0.5, floor + 4, 'walk', furLook(3, 'hat'), st(1.1), s * 0.62);
+  drawBingus(ctx, cx + 55 * s * 0.5, floor + 6, 'walk', furLook(0, 'bandana'), st(1.6), s * 0.58);
+  ctx.save();
+  ctx.translate(cx + 2 * s, floor - 147 * s);
+  ctx.rotate(Math.sin(t * 2) * 0.08);
+  drawBingus(ctx, 0, 0, 'walk', furLook(4, 'collar'), st(2), s * 0.42);
+  ctx.restore();
+  for (let i = 0; i < 12; i++) {
+    const k = (t * 0.4 + i / 12) % 1;
+    heart(ctx, cx - 160 + ((i * 61) % 320), floor - 60 - k * floor * 0.7, 8 + (i % 3) * 3, `rgba(255,120,170,${1 - k})`);
+  }
+}
+
+/** Food coma: stuffed with brothy rice, fast asleep on the floor. */
+function drawComa(ctx: CanvasRenderingContext2D, vw: number, vh: number, t: number, cx: number, floor: number, s: number) {
+  const wall = ctx.createLinearGradient(0, 0, 0, floor);
+  wall.addColorStop(0, '#2c2348');
+  wall.addColorStop(1, '#4a3a6a');
+  ctx.fillStyle = wall;
+  ctx.fillRect(0, 0, vw, floor);
+  // warm lamp glow
+  ctx.globalCompositeOperation = 'lighter';
+  const lg = ctx.createRadialGradient(cx + 40, floor - 40, 20, cx + 40, floor - 40, 420);
+  lg.addColorStop(0, 'rgba(255,190,120,0.45)');
+  lg.addColorStop(1, 'rgba(255,190,120,0)');
+  ctx.fillStyle = lg;
+  ctx.fillRect(0, 0, vw, vh);
+  ctx.globalCompositeOperation = 'source-over';
+  // window with moon
+  ctx.fillStyle = '#141032';
+  const wx = vw * 0.68, wy = floor * 0.18, ww = Math.min(220, vw * 0.22);
+  ctx.fillRect(wx, wy, ww, ww * 0.8);
+  ctx.fillStyle = '#fff6e6';
+  ctx.beginPath();
+  ctx.arc(wx + ww * 0.7, wy + ww * 0.25, ww * 0.1, 0, TAU);
+  ctx.fill();
+  ctx.strokeStyle = '#8a7ab0';
+  ctx.lineWidth = 6;
+  ctx.strokeRect(wx, wy, ww, ww * 0.8);
+  // tatami floor
+  ctx.fillStyle = '#b8a46a';
+  ctx.fillRect(0, floor, vw, vh - floor);
+  ctx.strokeStyle = 'rgba(0,0,0,0.15)';
+  ctx.lineWidth = 2;
+  for (let x = 0; x < vw; x += 90) {
+    ctx.beginPath();
+    ctx.moveTo(x, floor);
+    ctx.lineTo(x, vh);
+    ctx.stroke();
+  }
+  // low table with a tower of empty bowls
+  const tx = cx + 150 * s * 0.6;
+  ctx.fillStyle = '#7a4a2a';
+  ctx.fillRect(tx - 70, floor - 34, 140, 12);
+  ctx.fillRect(tx - 60, floor - 22, 10, 22);
+  ctx.fillRect(tx + 50, floor - 22, 10, 22);
+  for (let i = 0; i < 4; i++) drawRiceBowl(ctx, tx - 6 + (i % 2) * 6, floor - 46 - i * 20, 1.3, t + i);
+  // chopsticks
+  ctx.strokeStyle = '#d9a24a';
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(tx + 30, floor - 38);
+  ctx.lineTo(tx + 70, floor - 60);
+  ctx.moveTo(tx + 34, floor - 36);
+  ctx.lineTo(tx + 74, floor - 54);
+  ctx.stroke();
+  // Astray, lying on his back, very full, fast asleep
+  const pose = { ...defaultPose(), t, expr: 'idle' as const, outfit: OUTFIT, belly: 1, blink: 1 };
+  ctx.save();
+  ctx.translate(cx + 75 * s, floor - 17 * s);
+  ctx.rotate(-Math.PI / 2);
+  const breathe = 1 + Math.sin(t * 2.2) * 0.015;
+  ctx.scale(breathe, 1);
+  drawAstray(ctx, 0, 0, pose, s);
+  ctx.restore();
+  // Zzz
+  for (let i = 0; i < 3; i++) {
+    const k = (t * 0.45 + i / 3) % 1;
+    ctx.save();
+    ctx.globalAlpha = Math.sin(k * Math.PI);
+    ctx.font = `${22 + k * 26}px "Lilita One", sans-serif`;
+    ctx.fillStyle = '#ffffff';
+    ctx.lineWidth = 5;
+    ctx.strokeStyle = '#2a1420';
+    ctx.lineJoin = 'round';
+    const zx = cx - 60 * s + k * 90, zy = floor - 50 * s - k * 120;
+    ctx.strokeText('Z', zx, zy);
+    ctx.fillText('Z', zx, zy);
+    ctx.restore();
+  }
 }

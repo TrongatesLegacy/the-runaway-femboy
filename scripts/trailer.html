@@ -54,6 +54,7 @@
       // place the run at x on a clean stretch (no procedural obstacles) with scripted entities
       function stageAt(x, opts = {}) {
         g.reset(false);
+        g.outfit = opts.outfit ?? 'maid';
         g.view.px = opts.px ?? 430;
         g.started = true;
         g.playT = 5;
@@ -84,7 +85,7 @@
       const shots = [
         {
           // cold open: the mold, Astray unaware
-          dur: 2.8,
+          dur: 2.4,
           setup() {
             stageAt(2600, { gap: 230, px: 560 });
             g.started = false;
@@ -122,7 +123,7 @@
           flash: 1,
         },
         {
-          dur: 1.75,
+          dur: 1.5,
           setup() {
             stageAt(6000, { gap: 360 });
             muteSfx = false;
@@ -133,7 +134,7 @@
           flash: 0.6,
         },
         {
-          dur: 1.5,
+          dur: 1.25,
           setup() {
             stageAt(9000, { gap: 360 });
             place(ent('overpipe', g.p.x + 300, GY - 112, 320, 600, { style: 'green', nozzle: false }), ...stars(320, GY - 40, 6));
@@ -171,7 +172,7 @@
           flashColor: '#9cf06a',
         },
         {
-          dur: 1.75,
+          dur: 1.5,
           setup() {
             stageAt(31000, { gap: 400 });
             g.p.pie = 6;
@@ -185,7 +186,7 @@
           flashColor: '#ffb36b',
         },
         {
-          dur: 1.75,
+          dur: 1.5,
           setup() {
             stageAt(52500, { gap: 400 });
             g.p.pear = 5;
@@ -202,7 +203,7 @@
         },
         {
           // neon rooftops: chonk bounce + double jump
-          dur: 1.8,
+          dur: 1.4,
           setup() {
             stageAt(56000, { gap: 420 });
             const ch = bingus('chonk', 760);
@@ -215,7 +216,7 @@
         },
         {
           // the mold closes in
-          dur: 1.9,
+          dur: 1.4,
           setup() {
             stageAt(60000, { gap: 150 });
             g.p.stamina = 1;
@@ -228,7 +229,7 @@
         },
         {
           // mayo
-          dur: 1.7,
+          dur: 1.5,
           setup() {
             stageAt(64000, { gap: 420 });
             g.p.mayo = 62;
@@ -247,6 +248,38 @@
           flashColor: '#fff9e4',
         },
         {
+          // wardrobe montage: outfit swaps mid-run
+          dur: 2.2,
+          setup() {
+            stageAt(36000, { gap: 420 });
+            place(...stars(200, GY - 70, 14, 60));
+          },
+          frame(lt) {
+            const list = ['sky', 'goth', 'pickle', 'pie', 'pear', 'pipe', 'mold', 'mayo', 'bingus', 'sleepy', 'sakura', 'regular', 'maid'];
+            const i = Math.min(list.length - 1, Math.floor(lt / 0.17));
+            if (g.outfit !== list[i]) {
+              g.outfit = list[i];
+              g.fx.burst('star', g.p.x, g.p.y - 70, 10, 260, { color: ['#ffe66b', '#ff9fe0', '#9fe8ff'][i % 3], size: 6, max: 0.4 });
+              g.fx.add('ring', g.p.x, g.p.y - 70, { color: '#ffffff', size: 80, max: 0.25 });
+              if (i % 2 === 0) cue('sfx/star', 0.5, 1 + i * 0.04);
+            }
+          },
+          zoom: () => ({ z: 1.75, fx: g.p.x - g.camX + 40, fy: 505 }),
+          caption: { text: '13 OUTFITS TO UNLOCK', at: 0.05, color: '#ffd84a' },
+          flash: 0.6,
+        },
+        {
+          // the new endings, quick cuts
+          dur: 1.0,
+          scene: (t) => {
+            const k = t < 0.34 ? 'coma' : t < 0.67 ? 'furry' : 'secret';
+            drawEndingScene(ctx, k, VW, VH, 2.5 + t, k === 'furry' ? 'bingus' : k === 'coma' ? 'sleepy' : 'sakura');
+          },
+          setup() { cue('sfx/meow1', 0.7); },
+          caption: { text: '6 ENDINGS. SOME ARE… SECRET', at: 0.0, color: '#ff9fd6', size: 76 },
+          flash: 0.8,
+        },
+        {
           // home!
           dur: 1.5,
           setup() {
@@ -259,14 +292,14 @@
           flash: 0.5,
         },
         {
-          dur: 2.5,
+          dur: 2.2,
           scene: (t) => drawEndingScene(ctx, 'win', VW, VH, t + 0.35),
           setup() { cue('sfx/transform', 0.9); },
           caption: { text: 'GET YOUR REGULAR BACK ☆', at: 0.95, color: '#ffd84a', size: 70, pos: 'top' },
           flash: 1,
         },
         {
-          dur: 3.0,
+          dur: 2.6,
           endcard: true,
           setup() {
             g.reset(true);
@@ -413,6 +446,7 @@
             key(type, code);
           }
         });
+        shot.frame?.(lt);
         (shot.at || []).forEach(([at, fn], idx) => {
           if (lt >= at && !shot._done.has('a' + idx)) {
             shot._done.add('a' + idx);
