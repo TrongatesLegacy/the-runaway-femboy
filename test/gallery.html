@@ -1,0 +1,37 @@
+<!doctype html><html><head><meta charset="utf-8"><style>body{margin:0;background:#1b1830}</style></head>
+<body><canvas id="c" width="1800" height="1300"></canvas>
+<script type="module">
+import '@fontsource/lilita-one/400.css'; import '@fontsource/fredoka/400.css';
+import * as T from '/src/art/things.ts';
+import { getThemes, drawPlatform, drawDecor, DECOR_BY_STAGE } from '/src/art/backgrounds.ts';
+await document.fonts.load('20px "Lilita One"');
+const c = document.getElementById('c'); const ctx = c.getContext('2d');
+const g = ctx.createLinearGradient(0,0,0,1300); g.addColorStop(0,'#3a3060'); g.addColorStop(1,'#5a4a7a'); ctx.fillStyle=g; ctx.fillRect(0,0,1800,1300);
+ctx.save(); ctx.beginPath(); ctx.rect(1300,560,500,340); ctx.clip(); T.drawMold(ctx, 1600, 560, 900, 860, 1.3, 0.9, 760); ctx.restore();
+const st = (o={}) => ({ t: 1.2, walk: 1.3, squash: 0, flying: false, spin: 0, dizzy: false, ...o });
+const accs = ['none','sweater','bow','bandana','hat','collar'];
+const kinds = ['walk','hop','chonk','box','balloon'];
+kinds.forEach((k, i) => {
+  const look = { ...T.BINGUS_SKINS[i], eye: T.BINGUS_EYES[i], acc: accs[(i+1)%6], accColor: T.ACC_COLORS[i][0], accColor2: T.ACC_COLORS[i][1] };
+  T.drawBingus(ctx, 120 + i * 170, k==='balloon'? 190 : 230, k, look, st({ boxOpen: 1 }), 1.3);
+});
+accs.forEach((a, i) => {
+  const look = { ...T.BINGUS_SKINS[i%5], eye: T.BINGUS_EYES[i%5], acc: a, accColor: T.ACC_COLORS[i][0], accColor2: T.ACC_COLORS[i][1] };
+  T.drawBingus(ctx, 1000 + i * 130, 230, 'walk', look, st({ dizzy: i===5, squash: i===4 ? 0.5 : 0 }), 1.2);
+});
+const styles = Object.keys(T.PIPE_STYLES);
+styles.forEach((s, i) => T.drawLowPipe(ctx, 60 + i * 200, 520, 140, 80, T.PIPE_STYLES[s], 1, i*2));
+T.drawTallPipe(ctx, 1080, 520, 62, 190, T.PIPE_STYLES.green, 1, 1);
+T.drawOverPipe(ctx, 1200, 400, 300, T.PIPE_STYLES.copper, 0.5, 1, true);
+T.drawSteamVent(ctx, 1560, 520, 90, 0.8, 1);
+T.drawMayoPuddle(ctx, 60, 680, 140, 1, 3); T.drawMayoDrop(ctx, 260, 640, 500); T.drawMayoJar(ctx, 360, 650, 0.4);
+T.drawMayoBottle(ctx, 470, 690, 0.3);
+['pickle','pie','pear'].forEach((k,i)=>T.drawPowerBubble(ctx, 600 + i*110, 640, k, 1));
+T.drawStar(ctx, 950, 640, 1); T.drawStar(ctx, 1020, 640, 1, true);
+const th = getThemes();
+th.forEach((t, i) => drawPlatform(ctx, t, 1150 + i * 0, 700 + i*50, 200));
+DECOR_BY_STAGE.forEach((list, si) => { [...new Set(list)].forEach((d, j) => drawDecor(ctx, d, 70 + j * 120, 980 + si * 0 + (si===0?0:0), 1, j)); });
+[...new Set(DECOR_BY_STAGE[1])].forEach((d, j) => drawDecor(ctx, d, 70 + j * 120, 1140, 1, j));
+[...new Set(DECOR_BY_STAGE[2])].forEach((d, j) => drawDecor(ctx, d, 1050 + j * 100, 1280, 1, j));
+window.__done = true;
+</script></body></html>

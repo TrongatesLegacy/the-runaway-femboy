@@ -1,0 +1,192 @@
+{
+  "music/title": {
+    "loop": true,
+    "duration": 105.931,
+    "desc": "Cute, bouncy chiptune adventure loop (Zane Little \"Flowerbed Fields\")."
+  },
+  "music/stage1": {
+    "loop": true,
+    "duration": 74.254,
+    "desc": "Energetic retro chiptune action loop, the most laid-back of the three stage tracks (Juhani Junkala \"Level 1\")."
+  },
+  "music/stage2": {
+    "loop": true,
+    "duration": 72.796,
+    "desc": "Upbeat, driving chiptune chase loop (Juhani Junkala \"Level 2\")."
+  },
+  "music/stage3": {
+    "loop": true,
+    "duration": 81.896,
+    "desc": "Busiest, most intense chiptune loop of the set, for the final stretch (Juhani Junkala \"Level 3\")."
+  },
+  "music/win": {
+    "loop": false,
+    "duration": 10.666,
+    "desc": "NES-style triumphant victory fanfare (about 11 s) that resolves on a low final note."
+  },
+  "music/lose": {
+    "loop": false,
+    "duration": 6.0,
+    "desc": "Short descending \"game over\" synth jingle with a held, deflated final note."
+  },
+  "music/mayo": {
+    "loop": false,
+    "duration": 3.646,
+    "desc": "Sad-tuba \"wah wah wah wahhh\" comedic fail jingle."
+  },
+  "ambient/sewer": {
+    "loop": true,
+    "duration": 42.0,
+    "desc": "Low cave/sewer hum and air with echoey water drips."
+  },
+  "ambient/city": {
+    "loop": true,
+    "duration": 42.0,
+    "desc": "Distant, muffled city traffic rumble under soft wind."
+  },
+  "ambient/night": {
+    "loop": true,
+    "duration": 42.0,
+    "desc": "Night rooftop air: gentle wind, faint crickets, very faint far-off city hum."
+  },
+  "ambient/mold": {
+    "loop": true,
+    "duration": 24.0,
+    "desc": "Low wet bubbling and gurgling over a deep rumble with occasional slow squelches."
+  },
+  "sfx/jump": {
+    "loop": false,
+    "duration": 0.255,
+    "desc": "Retro rising square-wave jump blip."
+  },
+  "sfx/double_jump": {
+    "loop": false,
+    "duration": 0.187,
+    "desc": "Higher, faster rising chiptune sweep for the second jump."
+  },
+  "sfx/land": {
+    "loop": false,
+    "duration": 0.111,
+    "desc": "Tiny soft retro landing thud."
+  },
+  "sfx/slide": {
+    "loop": false,
+    "duration": 0.854,
+    "desc": "Fabric rustle plus a low sliding scrape."
+  },
+  "sfx/dash": {
+    "loop": false,
+    "duration": 0.176,
+    "desc": "Quick air whoosh."
+  },
+  "sfx/step1": {
+    "loop": false,
+    "duration": 0.103,
+    "desc": "Light footstep tap on hard floor (variant 1)."
+  },
+  "sfx/step2": {
+    "loop": false,
+    "duration": 0.105,
+    "desc": "Light footstep tap on hard floor (variant 2)."
+  },
+  "sfx/stomp": {
+    "loop": false,
+    "duration": 0.314,
+    "desc": "Cartoon boing with a soft thump underneath."
+  },
+  "sfx/slap": {
+    "loop": false,
+    "duration": 0.312,
+    "desc": "Sharp, bright thwack/slap."
+  },
+  "sfx/bonk": {
+    "loop": false,
+    "duration": 0.33,
+    "desc": "Hollow wooden bonk."
+  },
+  "sfx/meow1": {
+    "loop": false,
+    "duration": 1.081,
+    "desc": "Clean synthetic cartoon cat meow (rising then falling)."
+  },
+  "sfx/meow2": {
+    "loop": false,
+    "duration": 0.511,
+    "desc": "Short real cat meow."
+  },
+  "sfx/hit": {
+    "loop": false,
+    "duration": 0.537,
+    "desc": "Heavy body-punch thud with a small retro damage blip."
+  },
+  "sfx/clang": {
+    "loop": false,
+    "duration": 1.1,
+    "desc": "Metal pipe clang with a short ringing tail."
+  },
+  "sfx/splat": {
+    "loop": false,
+    "duration": 0.44,
+    "desc": "Wet, gooey squelch."
+  },
+  "sfx/star": {
+    "loop": false,
+    "duration": 0.325,
+    "desc": "Bright two-note chiptune coin pickup."
+  },
+  "sfx/powerup": {
+    "loop": false,
+    "duration": 0.743,
+    "desc": "Classic rising chiptune power-up arpeggio."
+  },
+  "sfx/pickle": {
+    "loop": false,
+    "duration": 0.871,
+    "desc": "Crunchy cucumber bite with a bright chiptune chime on top."
+  },
+  "sfx/pie": {
+    "loop": false,
+    "duration": 0.317,
+    "desc": "Whoosh followed by a squishy splat."
+  },
+  "sfx/pear": {
+    "loop": false,
+    "duration": 0.705,
+    "desc": "Warbling, shimmering chiptune power-up (invincibility)."
+  },
+  "sfx/growl": {
+    "loop": false,
+    "duration": 1.662,
+    "desc": "Goofy mouth-made monster growl, pitched down a little."
+  },
+  "sfx/transform": {
+    "loop": false,
+    "duration": 1.821,
+    "desc": "Rising magical sparkle/shimmer."
+  },
+  "sfx/click": {
+    "loop": false,
+    "duration": 0.1,
+    "desc": "Soft bright UI pluck/click."
+  },
+  "sfx/hover": {
+    "loop": false,
+    "duration": 0.022,
+    "desc": "Very soft UI tick."
+  },
+  "sfx/countdown": {
+    "loop": false,
+    "duration": 0.22,
+    "desc": "Short 8-bit pulse beep (A5)."
+  },
+  "sfx/go": {
+    "loop": false,
+    "duration": 0.55,
+    "desc": "Longer, higher 8-bit pulse beep (A6) for \"GO!\"."
+  },
+  "sfx/glass": {
+    "loop": false,
+    "duration": 1.202,
+    "desc": "Glass jar shattering."
+  }
+}

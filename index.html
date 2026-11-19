@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+    <meta name="theme-color" content="#160c28" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="description" content="Run from the mold, dodge pipes and binguses, avoid the mayo — and get your regular back." />
+    <title>The Runaway Femboy</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath d='M32 4l8 18 20 2-15 13 5 20-18-10-18 10 5-20L4 24l20-2z' fill='%23ff6fae' stroke='%232a1420' stroke-width='4'/%3E%3C/svg%3E" />
+  </head>
+  <body>
+    <div id="app">
+      <canvas id="game" aria-label="The Runaway Femboy game"></canvas>
+
+      <!-- LOADING -->
+      <div id="loading" class="screen show">
+        <div class="loader"><span>☆</span></div>
+      </div>
+
+      <!-- TITLE -->
+      <div id="title" class="screen">
+        <div class="title-wrap">
+          <h1 class="logo" aria-label="The Runaway Femboy">
+            <span class="logo-the">the</span>
+            <span class="logo-1">RUNAWAY</span>
+            <span class="logo-2">FEMBOY<i class="logo-star">☆</i></span>
+          </h1>
+          <p class="tagline">Outrun the mold. Dodge the binguses. <b>Avoid the mayo.</b></p>
+          <div class="menu">
+            <button class="btn btn-primary" id="btn-play"><span>▶</span> Play</button>
+            <div class="menu-row">
+              <button class="btn btn-ghost" id="btn-howto">How to play</button>
+              <button class="btn btn-ghost" id="btn-settings">Settings</button>
+            </div>
+          </div>
+          <p class="best" id="best"></p>
+        </div>
+      </div>
+
+      <!-- HUD BUTTONS -->
+      <button id="btn-pause" class="icon-btn" aria-label="Pause">
+        <svg viewBox="0 0 24 24"><rect x="6" y="5" width="4" height="14" rx="1.5" /><rect x="14" y="5" width="4" height="14" rx="1.5" /></svg>
+      </button>
+
+      <!-- TOUCH CONTROLS -->
+      <div id="touch" aria-hidden="true">
+        <div class="pad pad-left">
+          <button class="tbtn tbtn-slide" data-act="slide"><span class="g">▼</span><small>slide</small></button>
+          <button class="tbtn tbtn-dash" data-act="dash"><span class="g">⚡</span><small>dash</small></button>
+        </div>
+        <div class="pad pad-right">
+          <button class="tbtn tbtn-slap" data-act="slap"><span class="g">🥧</span><small>slap</small></button>
+          <button class="tbtn tbtn-jump" data-act="jump"><span class="g">▲</span><small>jump</small></button>
+        </div>
+      </div>
+
+      <!-- MODALS -->
+      <div id="modal-howto" class="modal" role="dialog" aria-modal="true" aria-labelledby="howto-h">
+        <div class="card">
+          <h2 id="howto-h">How to play</h2>
+          <p class="lead">The <b class="mold">Mold</b> is right behind you. Run home without getting caught — or drowning in mayo.</p>
+          <div class="controls">
+            <div class="ctrl"><kbd class="k-touch">▲</kbd><kbd class="k-keys">Space</kbd><span>Jump · press again to double jump</span></div>
+            <div class="ctrl"><kbd class="k-touch">▼</kbd><kbd class="k-keys">↓ / S</kbd><span>Slide under pipes · fast-fall in the air</span></div>
+            <div class="ctrl"><kbd class="k-touch">⚡</kbd><kbd class="k-keys">Shift / →</kbd><span>Dash (uses stamina) to escape the mold</span></div>
+            <div class="ctrl"><kbd class="k-touch">🥧</kbd><kbd class="k-keys">X / F</kbd><span>Slap — only with Pie Power</span></div>
+          </div>
+          <div class="powers">
+            <div class="power"><canvas data-icon="pickle" width="96" height="96"></canvas><b>Pickle Power</b><span>Speed boost + infinite stamina</span></div>
+            <div class="power"><canvas data-icon="pie" width="96" height="96"></canvas><b>Pie Power</b><span>Slap binguses, jars and mayo away</span></div>
+            <div class="power"><canvas data-icon="pear" width="96" height="96"></canvas><b>Pear Power</b><span>Invincible! Smash through anything</span></div>
+          </div>
+          <p class="tip">Stomp binguses for points. Collect ☆ to build combos. Mayo fills your meter — fill it up and it's a very bad ending.</p>
+          <button class="btn btn-primary" data-close>Got it!</button>
+        </div>
+      </div>
+
+      <div id="modal-settings" class="modal" role="dialog" aria-modal="true" aria-labelledby="settings-h">
+        <div class="card">
+          <h2 id="settings-h">Settings</h2>
+          <div class="sliders">
+            <label class="slider"><span>Master</span><input type="range" min="0" max="100" step="1" data-vol="master" /><output></output></label>
+            <label class="slider"><span>Music</span><input type="range" min="0" max="100" step="1" data-vol="music" /><output></output></label>
+            <label class="slider"><span>Sound FX</span><input type="range" min="0" max="100" step="1" data-vol="sfx" /><output></output></label>
+            <label class="slider"><span>Ambience</span><input type="range" min="0" max="100" step="1" data-vol="ambient" /><output></output></label>
+          </div>
+          <div class="toggles">
+            <label class="toggle"><input type="checkbox" id="opt-shake" checked /><i></i><span>Screen shake</span></label>
+            <label class="toggle"><input type="checkbox" id="opt-touch" /><i></i><span>Touch controls</span></label>
+          </div>
+          <div class="menu-row">
+            <button class="btn btn-ghost" id="btn-fullscreen">Fullscreen</button>
+            <button class="btn btn-primary" data-close>Done</button>
+          </div>
+          <p class="credits-link"><a href="./audio/CREDITS.md" target="_blank" rel="noopener">Audio credits</a></p>
+        </div>
+      </div>
+
+      <div id="modal-pause" class="modal" role="dialog" aria-modal="true" aria-labelledby="pause-h">
+        <div class="card card-small">
+          <h2 id="pause-h">Paused</h2>
+          <div class="menu">
+            <button class="btn btn-primary" id="btn-resume">Resume</button>
+            <button class="btn btn-ghost" id="btn-pause-settings">Settings</button>
+            <button class="btn btn-ghost" id="btn-restart">Restart</button>
+            <button class="btn btn-ghost" id="btn-quit">Quit to title</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- RESULT -->
+      <div id="result" class="screen">
+        <div class="result-card">
+          <div class="rank" id="res-rank">S</div>
+          <h2 id="res-title">HOME SAFE!</h2>
+          <p id="res-sub">He got his regular back ☆</p>
+          <div class="stats" id="res-stats"></div>
+          <div class="score-line"><span>Score</span><b id="res-score">0</b></div>
+          <p class="newbest" id="res-best"></p>
+          <div class="menu-row">
+            <button class="btn btn-primary" id="btn-again">Run again</button>
+            <button class="btn btn-ghost" id="btn-menu">Menu</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="toast" role="status" aria-live="polite"></div>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

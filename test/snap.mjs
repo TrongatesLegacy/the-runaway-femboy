@@ -1,0 +1,11 @@
+import puppeteer from 'puppeteer-core';
+const [,, url, out, w = '1600', h = '900', dpr = '1'] = process.argv;
+const browser = await puppeteer.launch({ executablePath: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', headless: 'new', args: ['--autoplay-policy=no-user-gesture-required'] });
+const page = await browser.newPage();
+await page.setViewport({ width: +w, height: +h, deviceScaleFactor: +dpr });
+page.on('console', m => { if (['error','warning'].includes(m.type())) console.log('[console]', m.type(), m.text()); });
+page.on('pageerror', e => console.log('[pageerror]', e.message));
+await page.goto(url, { waitUntil: 'networkidle0' });
+await page.waitForFunction('window.__done === true', { timeout: 15000 });
+await page.screenshot({ path: out });
+await browser.close();
