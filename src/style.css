@@ -250,18 +250,19 @@ body {
   width: 56px;
   height: 56px;
   border-radius: 16px;
-  border: 2px solid rgba(255, 255, 255, 0.18);
-  background: rgba(30, 16, 52, 0.8);
+  border: 2px solid rgba(255, 255, 255, 0.16);
+  background: linear-gradient(180deg, rgba(36, 22, 58, 0.78), rgba(22, 12, 40, 0.78));
   color: #fff;
   display: none;
+  padding: 0;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   touch-action: manipulation;
 }
 .icon-btn svg {
-  width: 26px;
-  height: 26px;
+  width: var(--icon, 26px);
+  height: var(--icon, 26px);
   fill: currentColor;
 }
 .icon-btn.show {

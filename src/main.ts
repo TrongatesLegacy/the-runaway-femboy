@@ -25,6 +25,9 @@ let dpr = 1;
 let scale = 1; // css px per logical px
 let hudScale = 1;
 let safeTop = 0;
+let safeLeft = 0;
+let safeRight = 0;
+const HUD_PANEL = 78; // HUD panel height in HUD units (see hud.ts)
 let cssW = 0, cssH = 0;
 let countdown = 0;
 let lastCountIdx = -1;
@@ -44,7 +47,7 @@ const BEST_KEY = 'trf.best.v1';
 // layout
 // ---------------------------------------------------------------------
 const safeProbe = document.createElement('div');
-safeProbe.style.cssText = 'position:fixed;top:0;left:0;padding-top:env(safe-area-inset-top);visibility:hidden;pointer-events:none';
+safeProbe.style.cssText = 'position:fixed;top:0;left:0;padding:env(safe-area-inset-top) env(safe-area-inset-right) 0 env(safe-area-inset-left);visibility:hidden;pointer-events:none';
 document.body.appendChild(safeProbe);
 
 function layout() {
@@ -59,7 +62,21 @@ function layout() {
   scale = Math.min(cssW / W, cssH / 720);
   const vw = cssW / scale, vh = cssH / scale;
   hudScale = Math.max(1, (portrait ? 0.68 : 0.62) / scale);
-  safeTop = parseFloat(getComputedStyle(safeProbe).paddingTop) || 0;
+  const sp = getComputedStyle(safeProbe);
+  safeTop = parseFloat(sp.paddingTop) || 0;
+  safeLeft = parseFloat(sp.paddingLeft) || 0;
+  safeRight = parseFloat(sp.paddingRight) || 0;
+  // size & place the HTML pause button exactly like a HUD panel
+  const unit = scale * hudScale;
+  const pb = document.getElementById('btn-pause');
+  if (pb) {
+    const size = HUD_PANEL * unit;
+    pb.style.top = `${safeTop + 14 * unit}px`;
+    pb.style.right = `${safeRight + 18 * unit}px`;
+    pb.style.width = pb.style.height = `${size}px`;
+    pb.style.borderRadius = `${18 * unit}px`;
+    pb.style.setProperty('--icon', `${Math.round(size * 0.42)}px`);
+  }
   if (game) {
     game.view.vw = vw;
     game.view.vh = vh;
@@ -308,8 +325,10 @@ function render() {
   if (state === 'play' || state === 'countdown' || state === 'paused') {
     ctx.save();
     ctx.scale(hudScale, hudScale);
-    const reserve = (56 + 18) / (scale * hudScale);
-    const hv = { ...v, vw: v.vw / hudScale, vh: v.vh / hudScale };
+    const unit = scale * hudScale;
+    const reserve = HUD_PANEL + 12;
+    ctx.translate(safeLeft / unit, 0);
+    const hv = { ...v, vw: (cssW - safeLeft - safeRight) / unit, vh: v.vh / hudScale };
     const saved = game.view;
     game.view = hv;
     drawHud(ctx, game, document.body.classList.contains('touch'), safeTop / (scale * hudScale), reserve);
