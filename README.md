@@ -2,6 +2,8 @@
 
 A fan-made browser runner starring Astray (in a maid outfit). The Mold is right behind you. Run home, dodge pipes and binguses, avoid the mayo and get your regular back.
 
+**Play it: https://trongateslegacy.github.io/the-runaway-femboy/**
+
 Runs in any modern browser, on desktop or mobile, in portrait or landscape. Everything is drawn procedurally in Canvas 2D, so the build has no image assets.
 
 ## Play / develop
@@ -14,6 +16,8 @@ npm run preview    # serve the built dist/
 ```
 
 ## Hosting
+
+Every push to `main` deploys to GitHub Pages through `.github/workflows/pages.yml`.
 
 `dist/` is a plain static folder, and all paths in it are relative. Any of these work:
 
